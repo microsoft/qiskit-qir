@@ -24,3 +24,23 @@ To install the package from source, clone the repo onto your machine, browse to 
 ```bash
 pip install -e .
 ```
+
+To install with all test requirements, run
+
+```bash
+pip install -e .[test]
+```
+
+## Running tests
+
+To run the tests in your local environment, run
+
+```bash
+pytest
+```
+
+To run tests on all supported Python versions, install `tox` using `pip install tox` and run
+
+```bash
+tox
+```
