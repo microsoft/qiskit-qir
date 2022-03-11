@@ -42,7 +42,7 @@ pip install qiskit-qir
 
 ### Install from source
 
-To install the package from source, clone the repo onto your machine, browse to `qdk-python/qiskit-qir` and run
+To install the package from source, clone the repo onto your machine, browse to the root directory and run
 
 ```bash
 pip install -e .
