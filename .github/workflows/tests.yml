@@ -1,9 +1,10 @@
 name: Python package
 
 on:
-  - push:
-      branches: [ main ]
-  - pull_request
+  # Triggers the workflow on all PRs and push events to the main branch
+  pull_request:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
