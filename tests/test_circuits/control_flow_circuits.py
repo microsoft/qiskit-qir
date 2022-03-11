@@ -25,6 +25,15 @@ def for_loop():
     return circuit
 
 @pytest.fixture()
+def for_loop():
+    circuit = QuantumCircuit(4, 0)
+    circuit.name = "Simple for-loop circuit"
+    circuit.h(3)
+    with circuit.for_loop(range(3)) as i:
+        circuit.cnot(3, i)
+    return circuit
+
+@pytest.fixture()
 def if_else():
     circuit = QuantumCircuit(3, 2)
 
@@ -41,3 +50,6 @@ def if_else():
         circuit.h(2)
         circuit.z(2)
     return circuit
+
+ignore = ['pytest', 'QuantumCircuit', 'ignore']
+cf_fixtures = [s for s in locals() if not s.startswith('__') and s not in ignore]

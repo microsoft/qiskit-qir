@@ -10,8 +10,5 @@ from test_circuits.random import __all__
 __all__ = [
     "ghz",
     "teleport",
-    "unroll",
-    "while_loop",
-    "for_loop",
-    "if_else"
-] + __all__
+    "unroll"
+] + __all__ + cf_fixtures
