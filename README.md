@@ -17,7 +17,9 @@ circuit.measure([0,1,2], [0, 1, 2])
 qir = to_qir(circuit)
 ```
 
-## Install from source
+## Development
+
+### Install from source
 
 To install the package from source, clone the repo onto your machine, browse to `qdk-python/qiskit-qir` and run
 
@@ -25,22 +27,30 @@ To install the package from source, clone the repo onto your machine, browse to 
 pip install -e .
 ```
 
-To install with all test requirements, run
+### Tests
+
+First, install the development dependencies using
 
 ```bash
-pip install -e .[test]
+pip install -r requirements_dev.txt
 ```
-
-## Running tests
 
 To run the tests in your local environment, run
 
 ```bash
-pytest
+make test
 ```
 
-To run tests on all supported Python versions, install `tox` using `pip install tox` and run
+To run the tests in virtual environments on supported Python versions, run
 
 ```bash
-tox
+make test-all
+```
+
+### Docs
+
+To build the docs using Sphinx, run
+
+```bash
+make docs
 ```
