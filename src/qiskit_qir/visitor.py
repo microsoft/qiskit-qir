@@ -5,6 +5,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
+from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder
 
 _log = logging.getLogger(name=__name__)
@@ -68,6 +69,19 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             })
         else:
             raise ValueError(f"Register of type {type(register)} not supported.")
+
+    def process_composite_instruction(self, instruction : Instruction, qargs, cargs):
+        subcircuit = instruction.definition
+        if len(qargs) != subcircuit.num_qubits:
+            raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of qubits; \
+{subcircuit.num_qubits} expected, {len(qargs)} provided")
+        if len(cargs) != subcircuit.num_clbits:
+            raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of classical bits; \
+{subcircuit.num_clbits} expected, {len(cargs)} provided")
+        for (inst, i_qargs, i_cargs) in subcircuit.data:
+            mapped_qbits = [qargs[i] for i in i_qargs]
+            mapped_clbits = [cargs[i] for i in i_cargs]
+            self.visit_instruction(inst, mapped_qbits, mapped_clbits)
 
     def visit_instruction(self, instruction, qargs, cargs, skip_condition=False):
         if instruction.name not in SUPPORTED_INSTRUCTIONS:
