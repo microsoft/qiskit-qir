@@ -10,7 +10,7 @@ from qiskit import QuantumCircuit
 def while_loop():
     circuit = QuantumCircuit(1, 1)
     circuit.name = "Simple while-loop circuit"
-    with circuit.while_loop(circuit.clbits[0], 0):
+    with circuit.while_loop((circuit.clbits[0], 0)):
         circuit.h(0)
         circuit.measure(0, 0)
     return circuit
@@ -20,17 +20,9 @@ def for_loop():
     circuit = QuantumCircuit(4, 0)
     circuit.name = "Simple for-loop circuit"
     circuit.h(3)
-    with circuit.for_loop(range(3)) as i:
-        circuit.cnot(3, i)
-    return circuit
-
-@pytest.fixture()
-def for_loop():
-    circuit = QuantumCircuit(4, 0)
-    circuit.name = "Simple for-loop circuit"
-    circuit.h(3)
-    with circuit.for_loop(range(3)) as i:
-        circuit.cnot(3, i)
+    with circuit.for_loop(range(3)) as q:
+        # Qiskit doesn't (yet) support cnot(3, i)
+        circuit.cnot(3, 0)
     return circuit
 
 @pytest.fixture()
