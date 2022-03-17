@@ -5,8 +5,10 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
+from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder
+from typing import List
 
 _log = logging.getLogger(name=__name__)
 
@@ -63,6 +65,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             self._qubit_labels.update({
                 bit: n + len(self._qubit_labels) for n, bit in enumerate(register)
             })
+            _log.debug(f"Added labels for qubits {[bit for n, bit in enumerate(register)]}")
         elif isinstance(register, ClassicalRegister):
             self._clbit_labels.update({
                 bit: n + len(self._clbit_labels) for n, bit in enumerate(register)
@@ -70,8 +73,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         else:
             raise ValueError(f"Register of type {type(register)} not supported.")
 
-    def process_composite_instruction(self, instruction : Instruction, qargs, cargs):
+    def process_composite_instruction(self, instruction : Instruction, qargs : List[Qubit], cargs : List[Clbit]):
         subcircuit = instruction.definition
+        _log.debug(f"Processing composite instruction {instruction.name} with qubits {qargs}")
         if len(qargs) != subcircuit.num_qubits:
             raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of qubits; \
 {subcircuit.num_qubits} expected, {len(qargs)} provided")
@@ -79,15 +83,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of classical bits; \
 {subcircuit.num_clbits} expected, {len(cargs)} provided")
         for (inst, i_qargs, i_cargs) in subcircuit.data:
-            mapped_qbits = [qargs[i] for i in i_qargs]
-            mapped_clbits = [cargs[i] for i in i_cargs]
+            mapped_qbits = [qargs[subcircuit.qubits.index(i)] for i in i_qargs]
+            mapped_clbits = [cargs[subcircuit.clbits.index] for i in i_cargs]
+            _log.debug(f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}")
             self.visit_instruction(inst, mapped_qbits, mapped_clbits)
 
     def visit_instruction(self, instruction, qargs, cargs, skip_condition=False):
-        if instruction.name not in SUPPORTED_INSTRUCTIONS:
-            raise ValueError(f"Gate {instruction.name} is not supported. \
-Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
-
         qlabels = [self._qubit_labels.get(bit) for bit in qargs]
         clabels = [self._clbit_labels.get(bit) for bit in cargs]
         qubits = [self._module.qubits[n] for n in qlabels]
@@ -158,6 +159,13 @@ Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
             # See: https://github.com/qir-alliance/pyqir/issues/74
             self._builder.x(self._module.qubits[0])
             self._builder.x(self._module.qubits[0])
+        elif instruction.definition:
+            _log.debug(f"About to process composite instruction {instruction.name} with qubits {qargs}")
+            self.process_composite_instruction(instruction, qargs, cargs)
+        else:
+            raise ValueError(f"Gate {instruction.name} is not supported. \
+Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
+
 
     def ir(self):
         return self._module.ir()

@@ -2,17 +2,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from test_circuits.basic_circuits import ghz, teleport, unroll
+from test_circuits.basic_circuits import ghz, teleport, unroll, teleport_with_subroutine
 from test_circuits.control_flow_circuits import *
 from test_circuits.random import *
 from test_circuits.random import __all__ as random_fixtures
 
 # All of the test fixtures
-__all__ = [
+all_tests = [
     "ghz",
     "teleport",
-    "unroll"
+    "unroll",
+    "teleport_with_subroutine"
 ] + random_fixtures + cf_fixtures
 
 # Tests we expect to fail
-__fail__ = cf_fixtures
+expected_to_fail_tests = cf_fixtures
+
+# Tests we should run
+__all__ = [test for test in all_tests if test not in expected_to_fail_tests]

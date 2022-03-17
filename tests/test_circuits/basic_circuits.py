@@ -43,3 +43,21 @@ def unroll():
     circ.id(0)
 
     return circ.decompose()
+
+@pytest.fixture()
+def teleport_with_subroutine():
+    bell_circ = QuantumCircuit(2, name="CreateBellPair")
+    bell_circ.h(0)
+    bell_circ.cx(0, 1)
+    q = QuantumRegister(3, name="q")
+    cr = ClassicalRegister(2, name="cr")
+    circuit = QuantumCircuit(q, cr, name="Teleport")
+    circuit.append(bell_circ.to_instruction(), [1, 2])
+    circuit.cx(0, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+    circuit.measure(1, 1)
+    circuit.x(2).c_if(cr, int("10", 2))
+    circuit.z(2).c_if(cr, int("01", 2))
+
+    return circuit
