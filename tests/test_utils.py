@@ -5,14 +5,26 @@
 
 from typing import List
 
-def _find_line(qir: List[str], prefix : str, err: str):
+def _find_line(qir: List[str], prefix : str, err: str) -> str:
     for line in qir:
         l = line.strip()
         if l.startswith(prefix):
             return l
     assert err
 
-def find_function(qir: List[str]):
+def _qubit_string(qubit: int) -> str:
+    if qubit == 0:
+        return "%Qubit* null"
+    else:
+        return f"%Qubit* inttoptr (i64 {qubit} to %Qubit*)"
+
+def _op_call_string(name: str, args: str) -> str:
+    return f"call void @__quantum__qis__{name}__body({args})"
+
+def _msr_call_string(res: str, qb: int) -> str:
+    return f"%{res} = call %Result* @__quantum__qis__m__body({_qubit_string(qb)})"
+
+def find_function(qir: List[str]) -> List[str]:
     result = []
     state = 0
     for line in qir:
@@ -27,7 +39,7 @@ def find_function(qir: List[str]):
             result.append(l)
     assert "No main function found"
 
-def check_attributes(qir: List[str], expected: int):
+def check_attributes(qir: List[str], expected: int) -> None:
     attr_string = 'attributes #0 = { "EntryPoint" "requiredQubits"="'
     attr_line = _find_line(qir, attr_string, "Missing entry point attribute")
     qubit_start = len(attr_string)
