@@ -43,5 +43,4 @@ def if_else():
         circuit.z(2)
     return circuit
 
-ignore = ['pytest', 'QuantumCircuit', 'ignore']
-cf_fixtures = [s for s in locals() if not s.startswith('__') and s not in ignore]
+cf_fixtures = ["while_loop", "for_loop", "if_else"]

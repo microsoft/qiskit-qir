@@ -18,11 +18,23 @@ def _qubit_string(qubit: int) -> str:
     else:
         return f"%Qubit* inttoptr (i64 {qubit} to %Qubit*)"
 
-def _op_call_string(name: str, args: str) -> str:
-    return f"call void @__quantum__qis__{name}__body({args})"
+def single_op_call_string(name: str, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)})"
 
-def _msr_call_string(res: str, qb: int) -> str:
-    return f"%{res} = call %Result* @__quantum__qis__m__body({_qubit_string(qb)})"
+def adj_op_call_string(name: str, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb)})"
+
+def double_op_call_string(name: str, qb1: int, qb2 : int) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb1)}, {_qubit_string(qb2)})"
+
+def rotation_call_string(name: str, theta: float, qb : int) -> str:
+    return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb)})"
+
+def measure_call_string(name: str, res: str, qb: int) -> str:
+    return f"%{res} = call %Result* @__quantum__qis__{name}__body({_qubit_string(qb)})"
+
+def return_string() -> str:
+    return "ret void"
 
 def find_function(qir: List[str]) -> List[str]:
     result = []
