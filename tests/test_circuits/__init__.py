@@ -2,12 +2,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from test_circuits.basic_circuits import ghz, teleport, unroll
-from test_circuits.random import *
-from test_circuits.random import __all__
 
-__all__ = [
+from .random import *
+from .basic_circuits import *
+
+# Core test fixtures
+core_tests = [
     "ghz",
     "teleport",
-    "unroll"
-] + __all__
+    "unroll",
+    "teleport_with_subroutine"
+] + random_fixtures
