@@ -36,6 +36,15 @@ def measure_call_string(name: str, res: str, qb: int) -> str:
 def return_string() -> str:
     return "ret void"
 
+def array_start_record_output_string() -> str:
+    return f"call void @__quantum__rt__array_start_record_output()"
+
+def array_end_record_output_string() -> str:
+    return f"call void @__quantum__rt__array_end_record_output()"
+
+def result_record_output_string(res: str) -> str:
+    return f"call void @__quantum__rt__result_record_output(%Result* %{res})"
+
 def find_function(qir: List[str]) -> List[str]:
     result = []
     state = 0

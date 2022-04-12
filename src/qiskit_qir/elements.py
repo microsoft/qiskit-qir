@@ -38,11 +38,12 @@ class _Instruction(_QuantumCircuitElement):
 
 
 class QiskitModule:
-    def __init__(self, name, num_qubits, num_clbits, elements):
+    def __init__(self, name, num_qubits, num_clbits, reg_sizes, elements):
         self._name = name
         self._elements = elements
         self._num_qubits = num_qubits
         self._num_clbits = num_clbits
+        self.reg_sizes = reg_sizes
     
     @property
     def name(self):
@@ -60,6 +61,7 @@ class QiskitModule:
     def from_quantum_circuit(cls, circuit: QuantumCircuit) -> "QuantumCircuit":
         """Create a new QiskitModule from a qiskit.QuantumCircuit object."""        
         elements = []
+        reg_sizes = [len(creg) for creg in circuit.cregs]
 
         # Registers
         elements.extend(_Register.from_element_list(circuit.qregs))
@@ -91,6 +93,7 @@ class QiskitModule:
             name=circuit.name,
             num_qubits=circuit.num_qubits,
             num_clbits=circuit.num_clbits,
+            reg_sizes=reg_sizes,
             elements=elements,
         )
 
@@ -98,3 +101,4 @@ class QiskitModule:
         visitor.visit_qiskit_module(self)
         for element in self._elements:
             element.accept(visitor)
+        visitor.record_output(self)
