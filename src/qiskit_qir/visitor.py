@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
-from pyqir.generator import SimpleModule, BasicQisBuilder
+from pyqir.generator import SimpleModule, BasicQisBuilder, types
 from typing import List
 
 _log = logging.getLogger(name=__name__)
@@ -57,7 +57,39 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             num_qubits=module.num_qubits,
             num_results=module.num_clbits,
         )
+
+        self._module.use_static_qubit_alloc(True)
+        self._module.use_static_result_alloc(True)
+
         self._builder = BasicQisBuilder(self._module.builder)
+
+    def record_output(self, module):
+        # produces output records of exactly "RESULT ARRAY_START"
+        array_start_record_output = self._module.add_external_function(
+            "__quantum__rt__array_start_record_output", types.Function(
+                [], types.VOID)
+        )
+
+        # produces output records of exactly "RESULT ARRAY_END"
+        array_end_record_output = self._module.add_external_function(
+            "__quantum__rt__array_end_record_output", types.Function(
+                [], types.VOID)
+        )
+
+        # produces output records of exactly "RESULT 0" or "RESULT 1"
+        result_record_output = self._module.add_external_function(
+            "__quantum__rt__result_record_output", types.Function(
+                [types.RESULT], types.VOID)
+        )
+
+        logical_id = 0
+        for size in module.reg_sizes:
+            self._module.builder.call(array_start_record_output, [])
+            for _ in range(size):
+                result_ref = self._module.results[logical_id]
+                logical_id += 1
+                self._module.builder.call(result_record_output, [result_ref])
+            self._module.builder.call(array_end_record_output, [])
 
     def visit_register(self, register):
         _log.debug(f"Visiting register '{register.name}'")
