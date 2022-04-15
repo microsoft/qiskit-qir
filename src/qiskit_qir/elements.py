@@ -66,24 +66,6 @@ class QiskitModule:
         # Registers
         elements.extend(_Register.from_element_list(circuit.qregs))
         elements.extend(_Register.from_element_list(circuit.cregs))
-        
-        regless_qubits = set(circuit.qubits) - {bit for reg in circuit.qregs for bit in reg}
-        if len(regless_qubits) > 0:
-            qregless = QuantumRegister(
-                size=len(regless_qubits),
-                name=circuit._unique_register_name("qregless_"),
-                bits=regless_qubits
-            )
-            elements.append(_Register(qregless))
-
-        regless_clbits = set(circuit.clbits) - {bit for reg in circuit.cregs for bit in reg}
-        if len(regless_clbits) > 0:
-            cregless = ClassicalRegister(
-                size=len(regless_qubits),
-                name=circuit._unique_register_name("cregless_"),
-                bits=regless_clbits
-            )
-            elements.append(_Register(cregless))
 
         # Instructions
         for instruction, qargs, cargs in circuit._data:
