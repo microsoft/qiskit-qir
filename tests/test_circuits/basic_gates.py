@@ -24,7 +24,7 @@ _adj_gates = {
 }
 
 _measurements = {
-    "measure" : "m"
+    "measure" : "mz"
 }
 
 _rotations = {
