@@ -58,9 +58,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             num_results=module.num_clbits,
         )
 
-        self._module.use_static_qubit_alloc(True)
-        self._module.use_static_result_alloc(True)
-
         self._builder = BasicQisBuilder(self._module.builder)
 
     def record_output(self, module):
