@@ -8,13 +8,13 @@ from qiskit.circuit.bit import Bit
 from qiskit.circuit.quantumcircuit import QuantumCircuit, Instruction
 
 
-class _QuantumCircuitElement:    
+class _QuantumCircuitElement:
     @classmethod
     def from_element_list(cls, elements):
         return [cls(elem) for elem in elements]
 
 
-class _Register(_QuantumCircuitElement):    
+class _Register(_QuantumCircuitElement):
     def __init__(self, register: Union[QuantumRegister, ClassicalRegister]):
         self._register = register
 
@@ -44,22 +44,22 @@ class QiskitModule:
         self._num_qubits = num_qubits
         self._num_clbits = num_clbits
         self.reg_sizes = reg_sizes
-    
+
     @property
     def name(self):
         return self._name
-    
+
     @property
     def num_qubits(self):
         return self._num_qubits
-    
+
     @property
     def num_clbits(self):
         return self._num_clbits
 
     @classmethod
     def from_quantum_circuit(cls, circuit: QuantumCircuit) -> "QuantumCircuit":
-        """Create a new QiskitModule from a qiskit.QuantumCircuit object."""        
+        """Create a new QiskitModule from a qiskit.QuantumCircuit object."""
         elements = []
         reg_sizes = [len(creg) for creg in circuit.cregs]
 

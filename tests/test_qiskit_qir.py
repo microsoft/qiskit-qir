@@ -20,7 +20,8 @@ from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_te
 import test_utils
 
 _log = logging.getLogger(__name__)
-_test_output_dir = Path(f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
+_test_output_dir = Path(
+    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
 if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
     _test_output_dir.mkdir()
 
@@ -29,7 +30,7 @@ if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
 def test_visitor(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = BasicQisVisitor()
+    visitor = BasicQisVisitor(profiles=["profileA"])
     module.accept(visitor)
     generated_ir = visitor.ir()
     _log.debug(generated_ir)
@@ -39,7 +40,7 @@ def test_visitor(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", core_tests)
 def test_to_qir_string(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_ir = to_qir(circuit)
+    generated_ir = to_qir(circuit, profiles=["profileA"])
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
         qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
@@ -51,7 +52,7 @@ def test_to_qir_string(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", core_tests)
 def test_to_qir_bitcode(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_bitcode = to_qir_bitcode(circuit)
+    generated_bitcode = to_qir_bitcode(circuit, profiles=["profileA"])
     assert generated_bitcode is not None
 
 
@@ -59,7 +60,7 @@ def test_to_qir_bitcode(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", cf_fixtures)
 def test_control_flow(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_ir = to_qir(circuit)
+    generated_ir = to_qir(circuit, profiles=["profileA"])
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
         qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
@@ -125,4 +126,3 @@ def test_measurement(circuit_name, request):
     assert func[3] == test_utils.array_end_record_output_string()
     assert func[4] == test_utils.return_string()
     assert len(func) == 5
-

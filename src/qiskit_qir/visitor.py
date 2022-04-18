@@ -12,6 +12,10 @@ from typing import List
 
 _log = logging.getLogger(name=__name__)
 
+class ProfileError(Exception):
+    """Base class for profile validation exceptions"""
+    pass
+
 SUPPORTED_INSTRUCTIONS = [
     "measure",
     "m",
@@ -44,11 +48,13 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self):
+    def __init__(self, profiles: List[str] = []):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
         self._clbit_labels = {}
+        self._profiles = profiles
+        self._measured_qubits = {}
 
     def visit_qiskit_module(self, module):
         _log.debug(f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})")
@@ -123,6 +129,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         qubits = [self._module.qubits[n] for n in qlabels]
         results = [self._module.results[n] for n in clabels]
 
+        if instruction.condition is not None and "profileA" not in self._profiles:
+            raise ProfileError("Support branching based on measurement requires profileA")
+
         labels = ", ".join([str(l) for l in qlabels + clabels])
         if instruction.condition is None or skip_condition:
             _log.debug(f"Visiting instruction '{instruction.name}' ({labels})")
@@ -153,47 +162,53 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     return __branch
 
             _branch(zip(conditions, values))()
-        elif "measure" == instruction.name or "m" == instruction.name:
+        elif "measure" == instruction.name or "m" == instruction.name or "mz" == instruction.name:
             for qubit, result in zip(qubits, results):
+                self._measured_qubits[qubit] = True
                 self._builder.m(qubit, result)
-        elif "cx" == instruction.name:
-            self._builder.cx(*qubits)
-        elif "cz" == instruction.name:
-            self._builder.cz(*qubits)
-        elif "h" == instruction.name:
-            self._builder.h(*qubits)
-        elif "reset" == instruction.name:
-            self._builder.reset(qubits[0])
-        elif "rx" == instruction.name:
-            self._builder.rx(*instruction.params, *qubits)
-        elif "ry" == instruction.name:
-            self._builder.ry(*instruction.params, *qubits)
-        elif "rz" == instruction.name:
-            self._builder.rz(*instruction.params, *qubits)
-        elif "s" == instruction.name:
-            self._builder.s(*qubits)
-        elif "sdg" == instruction.name:
-            self._builder.s_adj(*qubits)
-        elif "t" == instruction.name:
-            self._builder.t(*qubits)
-        elif "tdg" == instruction.name:
-            self._builder.t_adj(*qubits)
-        elif "x" == instruction.name:
-            self._builder.x(*qubits)
-        elif "y" == instruction.name:
-            self._builder.y(*qubits)
-        elif "z" == instruction.name:
-            self._builder.z(*qubits)
-        elif "id" == instruction.name:
-            # See: https://github.com/qir-alliance/pyqir/issues/74
-            self._builder.x(self._module.qubits[0])
-            self._builder.x(self._module.qubits[0])
-        elif instruction.definition:
-            _log.debug(f"About to process composite instruction {instruction.name} with qubits {qargs}")
-            self.process_composite_instruction(instruction, qargs, cargs)
         else:
-            raise ValueError(f"Gate {instruction.name} is not supported. \
-Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
+            if "profileB" not in self._profiles:
+                if any(map(self._measured_qubits.get, qubits)):
+                    raise ProfileError("Support for qubit reuse requires profileB")
+
+            if "cx" == instruction.name:
+                self._builder.cx(*qubits)
+            elif "cz" == instruction.name:
+                self._builder.cz(*qubits)
+            elif "h" == instruction.name:
+                self._builder.h(*qubits)
+            elif "reset" == instruction.name:
+                self._builder.reset(qubits[0])
+            elif "rx" == instruction.name:
+                self._builder.rx(*instruction.params, *qubits)
+            elif "ry" == instruction.name:
+                self._builder.ry(*instruction.params, *qubits)
+            elif "rz" == instruction.name:
+                self._builder.rz(*instruction.params, *qubits)
+            elif "s" == instruction.name:
+                self._builder.s(*qubits)
+            elif "sdg" == instruction.name:
+                self._builder.s_adj(*qubits)
+            elif "t" == instruction.name:
+                self._builder.t(*qubits)
+            elif "tdg" == instruction.name:
+                self._builder.t_adj(*qubits)
+            elif "x" == instruction.name:
+                self._builder.x(*qubits)
+            elif "y" == instruction.name:
+                self._builder.y(*qubits)
+            elif "z" == instruction.name:
+                self._builder.z(*qubits)
+            elif "id" == instruction.name:
+                # See: https://github.com/qir-alliance/pyqir/issues/74
+                self._builder.x(self._module.qubits[0])
+                self._builder.x(self._module.qubits[0])
+            elif instruction.definition:
+                _log.debug(f"About to process composite instruction {instruction.name} with qubits {qargs}")
+                self.process_composite_instruction(instruction, qargs, cargs)
+            else:
+                raise ValueError(f"Gate {instruction.name} is not supported. \
+    Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
 
 
     def ir(self):

@@ -29,7 +29,6 @@ def test_single_array():
     circuit.t(0)
     circuit.measure([0, 1, 2], [2, 0, 1])
 
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 3)
@@ -53,7 +52,6 @@ def test_no_measure_with_register():
     circuit = QuantumCircuit(1, 1)
     circuit.name = "test_no_measure_with_register"
     circuit.h(0)
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -91,7 +89,6 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
 
     circuit.measure([0, 0], [0, 2])
 
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 4, 4)
