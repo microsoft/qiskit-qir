@@ -32,7 +32,7 @@ def test_single_array():
     print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 3, 3)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 1)
     assert func[1] == test_utils.single_op_call_string("s", 2)
@@ -56,7 +56,7 @@ def test_no_measure_with_register():
     print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.array_start_record_output_string()
@@ -73,7 +73,7 @@ def test_no_measure_without_registers():
 
     generated_qir = to_qir(circuit).splitlines()
 
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.return_string()
@@ -94,7 +94,7 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 4, 4)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)

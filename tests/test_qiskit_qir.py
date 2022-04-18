@@ -72,7 +72,7 @@ def test_control_flow(circuit_name, request):
 def test_single_qubit_gates(circuit_name, request):
     qir_op, circuit = request.getfixturevalue(circuit_name)
     generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string(qir_op, 0)
     assert func[1] == test_utils.return_string()
@@ -83,7 +83,7 @@ def test_single_qubit_gates(circuit_name, request):
 def test_adj_gates(circuit_name, request):
     qir_op, circuit = request.getfixturevalue(circuit_name)
     generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.adj_op_call_string(qir_op, 0)
     assert func[1] == test_utils.return_string()
@@ -94,7 +94,7 @@ def test_adj_gates(circuit_name, request):
 def test_rotation_gates(circuit_name, request):
     qir_op, circuit = request.getfixturevalue(circuit_name)
     generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.rotation_call_string(qir_op, 0.5, 0)
     assert func[1] == test_utils.return_string()
@@ -105,7 +105,7 @@ def test_rotation_gates(circuit_name, request):
 def test_double_qubit_gates(circuit_name, request):
     qir_op, circuit = request.getfixturevalue(circuit_name)
     generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 2)
+    test_utils.check_attributes(generated_qir, 2, 0)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.double_op_call_string(qir_op, 0, 1)
     assert func[1] == test_utils.return_string()
@@ -116,7 +116,7 @@ def test_double_qubit_gates(circuit_name, request):
 def test_measurement(circuit_name, request):
     qir_op, circuit = request.getfixturevalue(circuit_name)
     generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 1)
+    test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
 
     assert func[0] == test_utils.measure_call_string(qir_op, 0, 0)
