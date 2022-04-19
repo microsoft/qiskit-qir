@@ -2,23 +2,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from datetime import datetime
-from pathlib import Path
-
-from sympy import false
-import pytest
-import logging
-
 from qiskit_qir.translate import to_qir
 from qiskit import ClassicalRegister, QuantumCircuit
 
 import test_utils
-
-_log = logging.getLogger(__name__)
-_test_output_dir = Path(
-    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
-if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
-    _test_output_dir.mkdir()
 
 
 def test_single_array():
