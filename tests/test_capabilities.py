@@ -62,6 +62,21 @@ def use_another_after_measure():
 
     return circuit
 
+
+def use_another_after_measure_and_condition():
+    q = QuantumRegister(3, name="q")
+    cr = ClassicalRegister(2, name="cr")
+    circuit = QuantumCircuit(q, cr)
+
+    circuit.h(0)
+    circuit.measure(0, 0)
+    circuit.h(1)
+    circuit.cx(1, 2)
+    circuit.measure(1, 1)
+    circuit.x(2).c_if(cr, int("10", 2))
+
+    return circuit
+
 # Create override visitor which allows us to vary the
 # codegen behavior
 
@@ -86,7 +101,7 @@ def matrix_to_qir(circuit, matrix: List[bool], capabilities: Capability):
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_fails_without_profileA(matrix):
+def test_branching_on_measurement_fails_without_required_capability(matrix):
     circuit = teleport()
     with pytest.raises(ProfileError) as exc_info:
         _ = matrix_to_qir(circuit, matrix, Capability.NONE)
@@ -96,7 +111,7 @@ def test_branching_on_measurement_fails_without_profileA(matrix):
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_passses_without_profileA(matrix):
+def test_branching_on_measurement_passses_with_required_capability(matrix):
     circuit = teleport()
     _ = matrix_to_qir(circuit, matrix, Capability.CONDITIONAL_BRANCHING_ON_RESULT)
 
@@ -112,12 +127,18 @@ def test_reuse_after_measurement_fails_without_profileB(matrix):
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
-def test_reuse_after_measurement_passses_without_profileB(matrix):
+def test_reuse_after_measurement_passes_with_required_capability(matrix):
     circuit = use_after_measure()
     _ = matrix_to_qir(circuit, matrix, Capability.QUBIT_USE_AFTER_MEASUREMENT)
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
-def test_using_an_unread_qubit_after_measuring_passes_without_profileB(matrix):
+def test_using_an_unread_qubit_after_measuring_passes_without_required_capability(matrix):
     circuit = use_another_after_measure()
     _ = matrix_to_qir(circuit, matrix, Capability.NONE)
+
+
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_use_another_after_measure_and_condition_passes_with_required_capability(matrix):
+    circuit = use_another_after_measure_and_condition()
+    _ = matrix_to_qir(circuit, matrix, Capability.QUBIT_USE_AFTER_MEASUREMENT | Capability.CONDITIONAL_BRANCHING_ON_RESULT)
