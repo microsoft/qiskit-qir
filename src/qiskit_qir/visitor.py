@@ -140,9 +140,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         qubits = [self._module.qubits[n] for n in qlabels]
         results = [self._module.results[n] for n in clabels]
 
-        if (instruction.condition is not None) and bool(
-            self._capabilities ^ Capability.CONDITIONAL_BRANCHING_ON_RESULT
-        ):
+        if (instruction.condition is not None) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
             raise ProfileError(
                 "Support branching based on measurement" +
                 " requires Capability.CONDITIONAL_BRANCHING_ON_RESULT"
@@ -189,7 +187,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self._measured_qubits[qubit] = True
                 self._builder.m(qubit, result)
         else:
-            if bool(self._capabilities ^ Capability.QUBIT_USE_AFTER_MEASUREMENT):
+            if not self._capabilities & Capability.QUBIT_USE_AFTER_MEASUREMENT:
                 # If we have a supported instruction, apply the capability
                 # check. If we have a composite instruction then it will call
                 # back into this function with a supported name and we'll
