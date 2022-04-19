@@ -60,7 +60,7 @@ def test_to_qir_bitcode(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", cf_fixtures)
 def test_control_flow(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_ir = to_qir(circuit, profiles=["profileA"])
+    generated_ir = to_qir(circuit)
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
         qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
