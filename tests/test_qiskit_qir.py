@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import pytest
 import logging
+from qiskit_qir.capability import Capability
 
 from qiskit_qir.elements import QiskitModule
 from qiskit_qir.visitor import BasicQisVisitor
@@ -30,7 +31,7 @@ if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
 def test_visitor(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = BasicQisVisitor(profiles=["profileA"])
+    visitor = BasicQisVisitor(Capability.CONDITIONAL_BRANCHING_ON_RESULT)
     module.accept(visitor)
     generated_ir = visitor.ir()
     _log.debug(generated_ir)
@@ -40,7 +41,7 @@ def test_visitor(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", core_tests)
 def test_to_qir_string(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_ir = to_qir(circuit, profiles=["profileA"])
+    generated_ir = to_qir(circuit, Capability.CONDITIONAL_BRANCHING_ON_RESULT)
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
         qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
@@ -52,7 +53,7 @@ def test_to_qir_string(circuit_name, request):
 @pytest.mark.parametrize("circuit_name", core_tests)
 def test_to_qir_bitcode(circuit_name, request):
     circuit = request.getfixturevalue(circuit_name)
-    generated_bitcode = to_qir_bitcode(circuit, profiles=["profileA"])
+    generated_bitcode = to_qir_bitcode(circuit, Capability.CONDITIONAL_BRANCHING_ON_RESULT)
     assert generated_bitcode is not None
 
 

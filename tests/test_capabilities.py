@@ -8,10 +8,11 @@ import pytest
 from qiskit_qir.elements import QiskitModule
 
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit_qir.capability import Capability
 from qiskit_qir.visitor import BasicQisVisitor, ProfileError
 
-PROFILE_A_MESSAGE = "Support branching based on measurement requires profileA"
-PROFILE_B_MESSAGE = "Support for qubit reuse requires profileB"
+PROFILE_A_MESSAGE = "Support branching based on measurement requires Capability.CONDITIONAL_BRANCHING_ON_RESULT"
+PROFILE_B_MESSAGE = "Support for qubit reuse requires Capability.QUBIT_USE_AFTER_MEASUREMENT"
 
 static_generator_variations = [
     [False, False],
@@ -66,8 +67,8 @@ def use_another_after_measure():
 
 
 class ConfigurableQisVisitor(BasicQisVisitor):
-    def __init__(self, matrix: List[bool], profiles: List[str] = []):
-        BasicQisVisitor.__init__(self, profiles)
+    def __init__(self, matrix: List[bool], capabilities: Capability):
+        BasicQisVisitor.__init__(self, capabilities)
         self._matrix = matrix
 
     def visit_qiskit_module(self, module):
@@ -77,9 +78,9 @@ class ConfigurableQisVisitor(BasicQisVisitor):
 
 
 # Utility using new visitor and codegen matrix
-def matrix_to_qir(circuit, matrix: List[bool], profiles: List[str] = []):
+def matrix_to_qir(circuit, matrix: List[bool], capabilities: Capability):
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = ConfigurableQisVisitor(matrix, profiles)
+    visitor = ConfigurableQisVisitor(matrix, capabilities)
     module.accept(visitor)
     return visitor.ir()
 
@@ -88,7 +89,7 @@ def matrix_to_qir(circuit, matrix: List[bool], profiles: List[str] = []):
 def test_branching_on_measurement_fails_without_profileA(matrix):
     circuit = teleport()
     with pytest.raises(ProfileError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, profiles=[""])
+        _ = matrix_to_qir(circuit, matrix, Capability.NONE)
 
     exception_raised = str(exc_info.value)
     assert exception_raised == PROFILE_A_MESSAGE
@@ -97,14 +98,14 @@ def test_branching_on_measurement_fails_without_profileA(matrix):
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_branching_on_measurement_passses_without_profileA(matrix):
     circuit = teleport()
-    _ = matrix_to_qir(circuit, matrix, profiles=["profileA"])
+    _ = matrix_to_qir(circuit, matrix, Capability.CONDITIONAL_BRANCHING_ON_RESULT)
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_reuse_after_measurement_fails_without_profileB(matrix):
     circuit = use_after_measure()
     with pytest.raises(ProfileError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, profiles=[""])
+        _ = matrix_to_qir(circuit, matrix, Capability.NONE)
 
     exception_raised = str(exc_info.value)
     assert exception_raised == PROFILE_B_MESSAGE
@@ -113,10 +114,10 @@ def test_reuse_after_measurement_fails_without_profileB(matrix):
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_reuse_after_measurement_passses_without_profileB(matrix):
     circuit = use_after_measure()
-    _ = matrix_to_qir(circuit, matrix, profiles=["profileB"])
+    _ = matrix_to_qir(circuit, matrix, Capability.QUBIT_USE_AFTER_MEASUREMENT)
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_using_an_unread_qubit_after_measuring_passes_without_profileB(matrix):
     circuit = use_another_after_measure()
-    _ = matrix_to_qir(circuit, matrix)
+    _ = matrix_to_qir(circuit, matrix, Capability.NONE)

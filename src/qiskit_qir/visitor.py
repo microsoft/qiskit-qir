@@ -10,11 +10,15 @@ from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder, types
 from typing import List
 
+from qiskit_qir.capability import Capability
+
 _log = logging.getLogger(name=__name__)
+
 
 class ProfileError(Exception):
     """Base class for profile validation exceptions"""
     pass
+
 
 SUPPORTED_INSTRUCTIONS = [
     "measure",
@@ -48,16 +52,17 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, profiles: List[str] = []):
+    def __init__(self, capabilities: Capability = Capability.NONE):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
         self._clbit_labels = {}
-        self._profiles = profiles
+        self._capabilities = capabilities
         self._measured_qubits = {}
 
     def visit_qiskit_module(self, module):
-        _log.debug(f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})")
+        _log.debug(
+            f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})")
         self._module = SimpleModule(
             name=module.name,
             num_qubits=module.num_qubits,
@@ -100,17 +105,22 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             self._qubit_labels.update({
                 bit: n + len(self._qubit_labels) for n, bit in enumerate(register)
             })
-            _log.debug(f"Added labels for qubits {[bit for n, bit in enumerate(register)]}")
+            _log.debug(
+                f"Added labels for qubits {[bit for n, bit in enumerate(register)]}")
         elif isinstance(register, ClassicalRegister):
             self._clbit_labels.update({
                 bit: n + len(self._clbit_labels) for n, bit in enumerate(register)
             })
         else:
-            raise ValueError(f"Register of type {type(register)} not supported.")
+            raise ValueError(
+                f"Register of type {type(register)} not supported.")
 
-    def process_composite_instruction(self, instruction : Instruction, qargs : List[Qubit], cargs : List[Clbit]):
+    def process_composite_instruction(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):
+        print(
+            f"instruction {instruction}, instruction.name {instruction.name}, instruction.definition {instruction.definition}")
         subcircuit = instruction.definition
-        _log.debug(f"Processing composite instruction {instruction.name} with qubits {qargs}")
+        _log.debug(
+            f"Processing composite instruction {instruction.name} with qubits {qargs}")
         if len(qargs) != subcircuit.num_qubits:
             raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of qubits; \
 {subcircuit.num_qubits} expected, {len(qargs)} provided")
@@ -120,7 +130,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         for (inst, i_qargs, i_cargs) in subcircuit.data:
             mapped_qbits = [qargs[subcircuit.qubits.index(i)] for i in i_qargs]
             mapped_clbits = [cargs[subcircuit.clbits.index] for i in i_cargs]
-            _log.debug(f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}")
+            _log.debug(
+                f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}")
             self.visit_instruction(inst, mapped_qbits, mapped_clbits)
 
     def visit_instruction(self, instruction, qargs, cargs, skip_condition=False):
@@ -129,32 +140,43 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         qubits = [self._module.qubits[n] for n in qlabels]
         results = [self._module.results[n] for n in clabels]
 
-        if instruction.condition is not None and "profileA" not in self._profiles:
-            raise ProfileError("Support branching based on measurement requires profileA")
+        if (instruction.condition is not None) and bool(
+            self._capabilities ^ Capability.CONDITIONAL_BRANCHING_ON_RESULT
+        ):
+            raise ProfileError(
+                "Support branching based on measurement" +
+                " requires Capability.CONDITIONAL_BRANCHING_ON_RESULT"
+            )
 
         labels = ", ".join([str(l) for l in qlabels + clabels])
         if instruction.condition is None or skip_condition:
             _log.debug(f"Visiting instruction '{instruction.name}' ({labels})")
 
         if instruction.condition is not None and skip_condition is False:
-            _log.debug(f"Visiting condition for instruction '{instruction.name}' ({labels})")
-            conditions = [self._module.results[self._clbit_labels.get(bit)] for bit in instruction.condition[0]]
+            _log.debug(
+                f"Visiting condition for instruction '{instruction.name}' ({labels})")
+            conditions = [self._module.results[self._clbit_labels.get(
+                bit)] for bit in instruction.condition[0]]
 
             # Convert value into a bitstring of the same length as classical register
             values = format(instruction.condition[1], f'0{len(results)}b')
 
             # Add branches recursively for each bit in the bitstring
             def __visit():
-                self.visit_instruction(instruction, qargs, cargs, skip_condition=True)
+                self.visit_instruction(
+                    instruction, qargs, cargs, skip_condition=True)
 
             def _branch(conditions_values):
                 try:
                     result, val = next(conditions_values)
+
                     def __branch():
                         self._builder.if_result(
                             result=result,
-                            one=_branch(conditions_values) if val == "1" else None,
-                            zero=_branch(conditions_values) if val == "0" else None
+                            one=_branch(
+                                conditions_values) if val == "1" else None,
+                            zero=_branch(
+                                conditions_values) if val == "0" else None
                         )
                 except StopIteration:
                     return __visit
@@ -167,9 +189,17 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self._measured_qubits[qubit] = True
                 self._builder.m(qubit, result)
         else:
-            if "profileB" not in self._profiles:
-                if any(map(self._measured_qubits.get, qubits)):
-                    raise ProfileError("Support for qubit reuse requires profileB")
+            if bool(self._capabilities ^ Capability.QUBIT_USE_AFTER_MEASUREMENT):
+                # If we have a supported instruction, apply the capability
+                # check. If we have a composite instruction then it will call
+                # back into this function with a supported name and we'll
+                # verify at that time
+                if instruction.name in SUPPORTED_INSTRUCTIONS:
+                    if any(map(self._measured_qubits.get, qubits)):
+                        raise ProfileError(
+                            "Support for qubit reuse requires " +
+                            "Capability.QUBIT_USE_AFTER_MEASUREMENT"
+                        )
 
             if "cx" == instruction.name:
                 self._builder.cx(*qubits)
@@ -204,12 +234,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self._builder.x(self._module.qubits[0])
                 self._builder.x(self._module.qubits[0])
             elif instruction.definition:
-                _log.debug(f"About to process composite instruction {instruction.name} with qubits {qargs}")
+                _log.debug(
+                    f"About to process composite instruction {instruction.name} with qubits {qargs}")
                 self.process_composite_instruction(instruction, qargs, cargs)
             else:
                 raise ValueError(f"Gate {instruction.name} is not supported. \
     Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
-
 
     def ir(self):
         return self._module.ir()
