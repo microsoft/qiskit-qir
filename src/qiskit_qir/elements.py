@@ -58,7 +58,7 @@ class QiskitModule:
         return self._num_clbits
 
     @classmethod
-    def from_quantum_circuit(cls, circuit: QuantumCircuit) -> "QuantumCircuit":
+    def from_quantum_circuit(cls, circuit: QuantumCircuit) -> "QiskitModule":
         """Create a new QiskitModule from a qiskit.QuantumCircuit object."""
         elements = []
         reg_sizes = [len(creg) for creg in circuit.cregs]
