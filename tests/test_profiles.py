@@ -2,24 +2,25 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from datetime import datetime
-from pathlib import Path
+from typing import List
 
-from sympy import false
 import pytest
-import logging
+from qiskit_qir.elements import QiskitModule
 
-from qiskit_qir.translate import to_qir
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
-from qiskit_qir.visitor import ProfileError
+from qiskit_qir.visitor import BasicQisVisitor, ProfileError
 
-import test_utils
+PROFILE_A_MESSAGE = "Support branching based on measurement requires profileA"
+PROFILE_B_MESSAGE = "Support for qubit reuse requires profileB"
 
-_log = logging.getLogger(__name__)
-_test_output_dir = Path(
-    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
-if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
-    _test_output_dir.mkdir()
+static_generator_variations = [
+    [False, False],
+    [False, True],
+    [True, False],
+    [True, True]
+]
+
+# test circuits
 
 
 def teleport() -> QuantumCircuit:
@@ -60,35 +61,62 @@ def use_another_after_measure():
 
     return circuit
 
+# Create override visitor which allows us to vary the
+# codegen behavior
 
-def test_branching_on_measurement_fails_without_profileA():
+
+class ConfigurableQisVisitor(BasicQisVisitor):
+    def __init__(self, matrix: List[bool], profiles: List[str] = []):
+        BasicQisVisitor.__init__(self, profiles)
+        self._matrix = matrix
+
+    def visit_qiskit_module(self, module):
+        BasicQisVisitor.visit_qiskit_module(self, module)
+        self._module.use_static_qubit_alloc(self._matrix[0])
+        self._module.use_static_result_alloc(self._matrix[1])
+
+
+# Utility using new visitor and codegen matrix
+def matrix_to_qir(circuit, matrix: List[bool], profiles: List[str] = []):
+    module = QiskitModule.from_quantum_circuit(circuit=circuit)
+    visitor = ConfigurableQisVisitor(matrix, profiles)
+    module.accept(visitor)
+    return visitor.ir()
+
+
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_branching_on_measurement_fails_without_profileA(matrix):
     circuit = teleport()
     with pytest.raises(ProfileError) as exc_info:
-        _ = to_qir(circuit, profiles=[""])
+        _ = matrix_to_qir(circuit, matrix, profiles=[""])
 
     exception_raised = str(exc_info.value)
-    assert exception_raised == "Support branching based on measurement requires profileA"
+    assert exception_raised == PROFILE_A_MESSAGE
 
 
-def test_branching_on_measurement_passses_without_profileA():
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_branching_on_measurement_passses_without_profileA(matrix):
     circuit = teleport()
-    _ = to_qir(circuit, profiles=["profileA"])
+    _ = matrix_to_qir(circuit, matrix, profiles=["profileA"])
 
 
-def test_reuse_after_measurement_fails_without_profileB():
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_reuse_after_measurement_fails_without_profileB(matrix):
     circuit = use_after_measure()
     with pytest.raises(ProfileError) as exc_info:
-        _ = to_qir(circuit, profiles=[""])
+        _ = matrix_to_qir(circuit, matrix, profiles=[""])
 
     exception_raised = str(exc_info.value)
-    assert exception_raised == "Support for qubit reuse requires profileB"
+    assert exception_raised == PROFILE_B_MESSAGE
 
 
-def test_reuse_after_measurement_passses_without_profileB():
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_reuse_after_measurement_passses_without_profileB(matrix):
     circuit = use_after_measure()
-    _ = to_qir(circuit, profiles=["profileB"])
+    _ = matrix_to_qir(circuit, matrix, profiles=["profileB"])
 
 
-def test_using_an_unread_qubit_after_measuring_passses_without_profileB():
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_using_an_unread_qubit_after_measuring_passes_without_profileB(matrix):
     circuit = use_another_after_measure()
-    _ = to_qir(circuit, profiles=["profileB"])
+    _ = matrix_to_qir(circuit, matrix)
