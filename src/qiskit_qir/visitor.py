@@ -10,15 +10,9 @@ from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder, types
 from typing import List
 
-from qiskit_qir.capability import Capability
+from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError, QubitUseAfterMeasurementError
 
 _log = logging.getLogger(name=__name__)
-
-
-class ProfileError(Exception):
-    """Base class for profile validation exceptions"""
-    pass
-
 
 SUPPORTED_INSTRUCTIONS = [
     "measure",
@@ -116,8 +110,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 f"Register of type {type(register)} not supported.")
 
     def process_composite_instruction(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):
-        print(
-            f"instruction {instruction}, instruction.name {instruction.name}, instruction.definition {instruction.definition}")
         subcircuit = instruction.definition
         _log.debug(
             f"Processing composite instruction {instruction.name} with qubits {qargs}")
@@ -141,10 +133,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         results = [self._module.results[n] for n in clabels]
 
         if (instruction.condition is not None) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
-            raise ProfileError(
-                "Support branching based on measurement" +
-                " requires Capability.CONDITIONAL_BRANCHING_ON_RESULT"
-            )
+            raise ConditionalBranchingOnResultError(instruction, qargs, cargs)
 
         labels = ", ".join([str(l) for l in qlabels + clabels])
         if instruction.condition is None or skip_condition:
@@ -194,10 +183,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # verify at that time
                 if instruction.name in SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, qubits)):
-                        raise ProfileError(
-                            "Support for qubit reuse requires " +
-                            "Capability.QUBIT_USE_AFTER_MEASUREMENT"
-                        )
+                        raise QubitUseAfterMeasurementError(instruction, qargs, cargs)
 
             if "cx" == instruction.name:
                 self._builder.cx(*qubits)
