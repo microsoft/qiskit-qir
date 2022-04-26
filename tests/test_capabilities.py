@@ -80,8 +80,8 @@ def use_another_after_measure_and_condition():
 
 
 class ConfigurableQisVisitor(BasicQisVisitor):
-    def __init__(self, matrix: List[bool], capabilities: Capability):
-        BasicQisVisitor.__init__(self, capabilities)
+    def __init__(self, matrix: List[bool], profile: str = "AdaptiveProfileExecution"):
+        BasicQisVisitor.__init__(self, profile)
         self._matrix = matrix
 
     def visit_qiskit_module(self, module):
@@ -91,9 +91,9 @@ class ConfigurableQisVisitor(BasicQisVisitor):
 
 
 # Utility using new visitor and codegen matrix
-def matrix_to_qir(circuit, matrix: List[bool], capabilities: Capability):
+def matrix_to_qir(circuit, matrix: List[bool], profile: str = "AdaptiveProfileExecution"):
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = ConfigurableQisVisitor(matrix, capabilities)
+    visitor = ConfigurableQisVisitor(matrix, profile)
     module.accept(visitor)
     return visitor.ir()
 
@@ -102,51 +102,51 @@ def matrix_to_qir(circuit, matrix: List[bool], capabilities: Capability):
 def test_branching_on_measurement_fails_without_required_capability(matrix):
     circuit = teleport()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, Capability.NONE)
+        _ = matrix_to_qir(circuit, matrix, "BaseProfileExecution")
 
     exception_raised = exc_info.value
     assert str(exception_raised.instruction) == "Instruction(name='x', num_qubits=1, num_clbits=0, params=[])"
     assert str(exception_raised.instruction.condition) == "(ClassicalRegister(2, 'cr'), 2)"
     assert str(exception_raised.qargs) == "[Qubit(QuantumRegister(3, 'qq'), 2)]"
     assert str(exception_raised.cargs) == "[]"
+    assert str(exception_raised.profile) == "BaseProfileExecution"
     assert exception_raised.instruction_string == "if(cr[2]) x qq[2]"
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_branching_on_measurement_passses_with_required_capability(matrix):
     circuit = teleport()
-    _ = matrix_to_qir(
-        circuit, matrix, Capability.CONDITIONAL_BRANCHING_ON_RESULT)
+    _ = matrix_to_qir(circuit, matrix)
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_reuse_after_measurement_fails_without_required_capability(matrix):
     circuit = use_after_measure()
     with pytest.raises(QubitUseAfterMeasurementError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, Capability.NONE)
+        _ = matrix_to_qir(circuit, matrix, "BaseProfileExecution")
 
     exception_raised = exc_info.value
     assert str(exception_raised.instruction) == "Instruction(name='h', num_qubits=1, num_clbits=0, params=[])"
     assert exception_raised.instruction.condition is None
     assert str(exception_raised.qargs) == "[Qubit(QuantumRegister(2, 'qq'), 1)]"
     assert str(exception_raised.cargs) == "[]"
+    assert str(exception_raised.profile) == "BaseProfileExecution"
     assert exception_raised.instruction_string == "h qq[1]"
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_reuse_after_measurement_passes_with_required_capability(matrix):
     circuit = use_after_measure()
-    _ = matrix_to_qir(circuit, matrix, Capability.QUBIT_USE_AFTER_MEASUREMENT)
+    _ = matrix_to_qir(circuit, matrix)
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_using_an_unread_qubit_after_measuring_passes_without_required_capability(matrix):
     circuit = use_another_after_measure()
-    _ = matrix_to_qir(circuit, matrix, Capability.NONE)
+    _ = matrix_to_qir(circuit, matrix, "BaseProfileExecution")
 
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_use_another_after_measure_and_condition_passes_with_required_capability(matrix):
     circuit = use_another_after_measure_and_condition()
-    _ = matrix_to_qir(circuit, matrix, Capability.QUBIT_USE_AFTER_MEASUREMENT |
-                      Capability.CONDITIONAL_BRANCHING_ON_RESULT)
+    _ = matrix_to_qir(circuit, matrix)

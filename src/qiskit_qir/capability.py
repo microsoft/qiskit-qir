@@ -13,6 +13,8 @@ class Capability(Flag):
     NONE = 0
     CONDITIONAL_BRANCHING_ON_RESULT = auto()
     QUBIT_USE_AFTER_MEASUREMENT = auto()
+    ALL = CONDITIONAL_BRANCHING_ON_RESULT | \
+          QUBIT_USE_AFTER_MEASUREMENT
 
 
 class CapabilityError(Exception):
@@ -21,7 +23,7 @@ class CapabilityError(Exception):
 
 
 class ConditionalBranchingOnResultError(CapabilityError):
-    def __init__(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):
+    def __init__(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit], profile: str):
         instruction_string = _get_instruction_string(instruction, qargs, cargs)
         self.instruction_string = instruction_string
         self.msg_suffix = "Support for branching based on measurement requires Capability.CONDITIONAL_BRANCHING_ON_RESULT"
@@ -30,10 +32,11 @@ class ConditionalBranchingOnResultError(CapabilityError):
         self.instruction = instruction
         self.qargs = qargs
         self.cargs = cargs
+        self.profile = profile
 
 
 class QubitUseAfterMeasurementError(CapabilityError):
-    def __init__(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):
+    def __init__(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit], profile: str):
         instruction_string = _get_instruction_string(instruction, qargs, cargs)
         self.instruction_string = instruction_string
         self.msg_suffix = "Support for qubit reuse requires Capability.QUBIT_USE_AFTER_MEASUREMENT"
@@ -42,6 +45,7 @@ class QubitUseAfterMeasurementError(CapabilityError):
         self.instruction = instruction
         self.qargs = qargs
         self.cargs = cargs
+        self.profile = profile
 
 
 def _get_instruction_string(instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):

@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
+from io import UnsupportedOperation
 import logging
 from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
@@ -46,12 +47,13 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, capabilities: Capability = Capability.NONE):
+    def __init__(self, profile: str = "AdaptiveProfileExecution"):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
         self._clbit_labels = {}
-        self._capabilities = capabilities
+        self._profile = profile
+        self._capabilities = self._map_profile_to_capabilities(profile)
         self._measured_qubits = {}
 
     def visit_qiskit_module(self, module):
@@ -133,7 +135,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         results = [self._module.results[n] for n in clabels]
 
         if (instruction.condition is not None) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
-            raise ConditionalBranchingOnResultError(instruction, qargs, cargs)
+            raise ConditionalBranchingOnResultError(instruction, qargs, cargs, self._profile)
 
         labels = ", ".join([str(l) for l in qlabels + clabels])
         if instruction.condition is None or skip_condition:
@@ -183,7 +185,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # verify at that time
                 if instruction.name in SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, qubits)):
-                        raise QubitUseAfterMeasurementError(instruction, qargs, cargs)
+                        raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
 
             if "cx" == instruction.name:
                 self._builder.cx(*qubits)
@@ -230,3 +232,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
     def bitcode(self):
         return self._module.bitcode()
+
+    def _map_profile_to_capabilities(self, profile: str):
+        value = profile.strip()
+        if "BaseProfileExecution" == value:
+            return Capability.NONE
+        elif "AdaptiveProfileExecution" == value:
+            return Capability.ALL
+        else:
+            raise UnsupportedOperation(f"The supplied profile is not supported: {profile}.")
