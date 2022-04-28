@@ -45,7 +45,6 @@ def use_after_measure():
     circuit.measure(1, 1)
     circuit.h(1)
 
-
     return circuit
 
 
