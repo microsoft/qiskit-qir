@@ -234,10 +234,10 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         return self._module.bitcode()
 
     def _map_profile_to_capabilities(self, profile: str):
-        value = profile.strip()
-        if "BaseProfileExecution" == value:
+        value = profile.strip().lower()
+        if "BaseProfileExecution".lower() == value:
             return Capability.NONE
-        elif "AdaptiveProfileExecution" == value:
+        elif "AdaptiveProfileExecution".lower() == value:
             return Capability.ALL
         else:
             raise UnsupportedOperation(f"The supplied profile is not supported: {profile}.")
