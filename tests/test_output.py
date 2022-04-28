@@ -2,23 +2,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from datetime import datetime
-from pathlib import Path
-
-from sympy import false
-import pytest
-import logging
-
 from qiskit_qir.translate import to_qir
 from qiskit import ClassicalRegister, QuantumCircuit
 
 import test_utils
-
-_log = logging.getLogger(__name__)
-_test_output_dir = Path(
-    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
-if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
-    _test_output_dir.mkdir()
 
 
 def test_single_array():
@@ -29,7 +16,6 @@ def test_single_array():
     circuit.t(0)
     circuit.measure([0, 1, 2], [2, 0, 1])
 
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 3)
@@ -53,7 +39,6 @@ def test_no_measure_with_register():
     circuit = QuantumCircuit(1, 1)
     circuit.name = "test_no_measure_with_register"
     circuit.h(0)
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -91,7 +76,6 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
 
     circuit.measure([0, 0], [0, 2])
 
-    print(to_qir(circuit))
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 4, 4)

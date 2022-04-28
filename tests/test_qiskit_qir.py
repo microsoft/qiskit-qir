@@ -12,7 +12,6 @@ from qiskit_qir.visitor import BasicQisVisitor
 from qiskit_qir.translate import to_qir, to_qir_bitcode
 
 from test_circuits import core_tests
-import test_circuits.random
 import test_circuits.basic_circuits
 from test_circuits.control_flow_circuits import cf_fixtures
 from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_tests, double_op_tests, measurement_tests
@@ -20,7 +19,8 @@ from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_te
 import test_utils
 
 _log = logging.getLogger(__name__)
-_test_output_dir = Path(f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
+_test_output_dir = Path(
+    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
 if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
     _test_output_dir.mkdir()
 
@@ -125,4 +125,3 @@ def test_measurement(circuit_name, request):
     assert func[3] == test_utils.array_end_record_output_string()
     assert func[4] == test_utils.return_string()
     assert len(func) == 5
-
