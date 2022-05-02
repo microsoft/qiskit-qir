@@ -16,6 +16,7 @@ from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError,
 _log = logging.getLogger(name=__name__)
 
 SUPPORTED_INSTRUCTIONS = [
+    "barrier",
     "measure",
     "m",
     "cx",
@@ -186,8 +187,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 if instruction.name in SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, qubits)):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
-
-            if "cx" == instruction.name:
+            if "barrier" == instruction.name:
+                pass
+            elif "cx" == instruction.name:
                 self._builder.cx(*qubits)
             elif "cz" == instruction.name:
                 self._builder.cz(*qubits)

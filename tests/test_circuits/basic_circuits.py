@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
+from builtins import format
 import pytest
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
@@ -59,5 +60,39 @@ def teleport_with_subroutine():
     circuit.measure(1, 1)
     circuit.x(2).c_if(cr, int("10", 2))
     circuit.z(2).c_if(cr, int("01", 2))
+
+    return circuit
+
+@pytest.fixture()
+def bernstein_vazirani_with_barriers():
+    num_qubits = 5
+    qq = QuantumRegister(num_qubits+1, name="qq")
+    cr = ClassicalRegister(num_qubits, name="cr")
+
+    circuit = QuantumCircuit(qq, cr, name="Bernstein-Vazirani")
+
+    circuit.h(num_qubits)
+    circuit.z(num_qubits)
+
+    for index in range(num_qubits):
+        circuit.h(index)
+
+    circuit.barrier()
+
+    oracle = format(2, 'b').zfill(num_qubits)
+    oracle = oracle[::-1]
+    for index in range(num_qubits):
+        if oracle[index] == '0':
+            circuit.i(index)
+        else:
+            circuit.cx(index, num_qubits)
+
+    circuit.barrier()
+
+    for index in range(num_qubits):
+        circuit.h(index)
+
+    for index in range(num_qubits):
+        circuit.measure(index, index)
 
     return circuit
