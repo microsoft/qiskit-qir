@@ -11,5 +11,6 @@ core_tests = [
     "ghz",
     "teleport",
     "unroll",
-    "teleport_with_subroutine"
+    "teleport_with_subroutine",
+    "bernstein_vazirani_with_barriers"
 ] + random_fixtures
