@@ -60,7 +60,6 @@ def _get_instruction_string(instruction: Instruction, qargs: List[Qubit], cargs:
         # - tuple (ClassicalRegister, int)
         # - tuple (Clbit, bool)
         # - tuple (Clbit, int)
-        # Getting here should be an error
         if isinstance(instruction.condition[0], Clbit):
             bit : Clbit = instruction.condition[0]
             value : Union[int, bool] = instruction.condition[1]
