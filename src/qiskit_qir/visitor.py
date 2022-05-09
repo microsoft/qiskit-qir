@@ -15,8 +15,7 @@ from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError,
 
 _log = logging.getLogger(name=__name__)
 
-SUPPORTED_INSTRUCTIONS = [
-    "barrier",
+QUANTUM_INSTRUCTIONS = [
     "measure",
     "m",
     "cx",
@@ -35,6 +34,13 @@ SUPPORTED_INSTRUCTIONS = [
     "z",
     "id"
 ]
+
+NOOP_INSTRUCTIONS = [
+    "barrier",
+    "delay",
+]
+
+SUPPORTED_INSTRUCTIONS = QUANTUM_INSTRUCTIONS + NOOP_INSTRUCTIONS
 
 
 class QuantumCircuitElementVisitor(metaclass=ABCMeta):
@@ -189,6 +195,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
             if "barrier" == instruction.name:
                 pass
+            elif "delay" == instruction.name:
+                pass
             elif "cx" == instruction.name:
                 self._builder.cx(*qubits)
             elif "cz" == instruction.name:
@@ -229,10 +237,10 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 raise ValueError(f"Gate {instruction.name} is not supported. \
     Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
 
-    def ir(self):
+    def ir(self) -> str:
         return self._module.ir()
 
-    def bitcode(self):
+    def bitcode(self) -> bytes:
         return self._module.bitcode()
 
     def _map_profile_to_capabilities(self, profile: str):

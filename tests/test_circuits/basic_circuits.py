@@ -96,3 +96,20 @@ def bernstein_vazirani_with_barriers():
         circuit.measure(index, index)
 
     return circuit
+
+@pytest.fixture()
+def ghz_with_delay():
+    qq = QuantumRegister(4, name="qq")
+    cr = ClassicalRegister(3, name="cr")
+    circuit = QuantumCircuit(qq, cr)
+    circuit.name = "Qiskit Sample - 3-qubit GHZ circuit"
+    circuit.delay(23.54, None, "us")
+    circuit.h(0)
+    circuit.delay(42, qq[0], "ps")
+    circuit.cx(0, 1)
+    circuit.delay(23, 2, "ms")
+    circuit.cx(1, 2)
+    circuit.delay(3, qq[1])
+    circuit.measure([0,1,2], [0, 1, 2])
+
+    return circuit
