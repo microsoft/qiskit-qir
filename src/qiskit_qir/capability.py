@@ -4,7 +4,8 @@
 ##
 from enum import Flag, auto
 import os
-from typing import List
+from typing import List, Union
+from qiskit import ClassicalRegister
 from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
 
@@ -55,11 +56,29 @@ def _get_instruction_string(instruction: Instruction, qargs: List[Qubit], cargs:
         ["%s[%i]" % (q.register.name, q.index) for q in qargs])
     instruction_name = instruction.name
     if instruction.condition is not None:
-        instruction_name = "if(%s[%d]) %s" % (
-            instruction.condition[0].name,
-            instruction.condition[1],
-            instruction_name
-        )
+        # condition should be a
+        # - tuple (ClassicalRegister, int)
+        # - tuple (Clbit, bool)
+        # - tuple (Clbit, int)
+        # Getting here should be an error
+        if isinstance(instruction.condition[0], Clbit):
+            bit : Clbit = instruction.condition[0]
+            value : Union[int, bool] = instruction.condition[1]
+            instruction_name = "if(%s[%d] == %s) %s" % (
+                bit._register.name,
+                bit._index,
+                value,
+                instruction_name
+            )
+        else:
+            register : ClassicalRegister = instruction.condition[0]
+            value : int = instruction.condition[1]
+            instruction_name = "if(%s == %d) %s" % (
+                register._name,
+                value,
+                instruction_name
+            )
+
     if gate_params:
         return f"{instruction_name}({gate_params}) {qubit_params}"
     else:
