@@ -229,10 +229,10 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 raise ValueError(f"Gate {instruction.name} is not supported. \
     Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
 
-    def ir(self):
+    def ir(self) -> str:
         return self._module.ir()
 
-    def bitcode(self):
+    def bitcode(self) -> bytes:
         return self._module.bitcode()
 
     def _map_profile_to_capabilities(self, profile: str):
