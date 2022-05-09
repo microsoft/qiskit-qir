@@ -15,8 +15,7 @@ from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError,
 
 _log = logging.getLogger(name=__name__)
 
-SUPPORTED_INSTRUCTIONS = [
-    "barrier",
+QUANTUM_INSTRUCTIONS = [
     "measure",
     "m",
     "cx",
@@ -35,6 +34,13 @@ SUPPORTED_INSTRUCTIONS = [
     "z",
     "id"
 ]
+
+NOOP_INSTRUCTIONS = [
+    "barrier",
+    "delay",
+]
+
+SUPPORTED_INSTRUCTIONS = QUANTUM_INSTRUCTIONS + NOOP_INSTRUCTIONS
 
 
 class QuantumCircuitElementVisitor(metaclass=ABCMeta):
@@ -188,6 +194,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     if any(map(self._measured_qubits.get, qubits)):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
             if "barrier" == instruction.name:
+                pass
+            elif "delay" == instruction.name:
                 pass
             elif "cx" == instruction.name:
                 self._builder.cx(*qubits)

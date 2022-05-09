@@ -11,8 +11,7 @@ from qiskit_qir.elements import QiskitModule
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit_qir.translate import to_qir, to_qir_bitcode
 
-from test_circuits import core_tests
-import test_circuits.basic_circuits
+from test_circuits import core_tests, noop_tests
 from test_circuits.control_flow_circuits import cf_fixtures
 from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_tests, double_op_tests, measurement_tests
 
@@ -54,6 +53,16 @@ def test_to_qir_bitcode(circuit_name, request):
     generated_bitcode = to_qir_bitcode(circuit)
     assert generated_bitcode is not None
 
+
+@pytest.mark.parametrize("circuit_name", noop_tests)
+def test_noop_gates(circuit_name, request):
+    circuit = request.getfixturevalue(circuit_name)
+    module = QiskitModule.from_quantum_circuit(circuit=circuit)
+    visitor = BasicQisVisitor()
+    module.accept(visitor)
+    generated_ir = visitor.ir()
+    _log.debug(generated_ir)
+    assert generated_ir is not None
 
 @pytest.mark.xfail(Reason="OpenQASM 3.0-style control flow is not supported yet")
 @pytest.mark.parametrize("circuit_name", cf_fixtures)
