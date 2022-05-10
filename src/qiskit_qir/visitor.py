@@ -54,7 +54,7 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, profile: str = "AdaptiveProfileExecution"):
+    def __init__(self, profile: str = "AdaptiveProfileExecution", kwargs = {}):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
@@ -62,6 +62,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._profile = profile
         self._capabilities = self._map_profile_to_capabilities(profile)
         self._measured_qubits = {}
+        self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
+        self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
+        self._record_output = kwargs.get("record_output", True)
 
     def visit_qiskit_module(self, module):
         _log.debug(
@@ -71,10 +74,15 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             num_qubits=module.num_qubits,
             num_results=module.num_clbits,
         )
+        self._module.use_static_qubit_alloc(self._use_static_qubit_alloc)
+        self._module.use_static_result_alloc(self._use_static_result_alloc)
 
         self._builder = BasicQisBuilder(self._module.builder)
 
     def record_output(self, module):
+        if self._record_output == False:
+            return
+
         # produces output records of exactly "RESULT ARRAY_START"
         array_start_record_output = self._module.add_external_function(
             "__quantum__rt__array_start_record_output", types.Function(
