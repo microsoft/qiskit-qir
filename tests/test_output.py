@@ -93,3 +93,118 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     assert func[10] == test_utils.array_end_record_output_string()
     assert func[11] == test_utils.return_string()
     assert len(func) == 12
+
+
+def test_use_static_qubit_alloc_is_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, use_static_qubit_alloc=False)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, -1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.allocate_qubit(0)
+    assert func[1] == test_utils.single_op_call_string("h", 0, static_alloc=False)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0, static_qubit_alloc=False)
+    assert func[3] == test_utils.array_start_record_output_string()
+    assert func[4] == test_utils.result_record_output_string(0)
+    assert func[5] == test_utils.array_end_record_output_string()
+    assert func[6] == test_utils.release_qubit(0)
+    assert func[7] == test_utils.return_string()
+    assert len(func) == 8
+
+
+def test_use_static_result_alloc_is_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, use_static_result_alloc=False)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, -1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("h", 0)
+    assert func[1] == test_utils.measure_call_string("m", 0, 0, static_result_alloc=False)
+    assert func[2] == test_utils.array_start_record_output_string()
+    assert func[3] == test_utils.result_record_output_string(0, static_alloc=False)
+    assert func[4] == test_utils.array_end_record_output_string()
+    assert func[5] == test_utils.return_string()
+    assert len(func) == 6
+
+
+def test_using_both_static_allocs_false_is_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, use_static_qubit_alloc=False, use_static_result_alloc=False)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, -1, -1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.allocate_qubit(0)
+    assert func[1] == test_utils.single_op_call_string("h", 0, static_alloc=False)
+    assert func[2] == test_utils.measure_call_string("m", 0, 0, static_qubit_alloc=False, static_result_alloc=False)
+    assert func[3] == test_utils.array_start_record_output_string()
+    assert func[4] == test_utils.result_record_output_string(0, static_alloc=False)
+    assert func[5] == test_utils.array_end_record_output_string()
+    assert func[6] == test_utils.release_qubit(0)
+    assert func[7] == test_utils.return_string()
+    assert len(func) == 8
+
+
+def test_using_both_static_allocs_true_is_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, use_static_qubit_alloc=True, use_static_result_alloc=True)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("h", 0)
+    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[2] == test_utils.array_start_record_output_string()
+    assert func[3] == test_utils.result_record_output_string(0)
+    assert func[4] == test_utils.array_end_record_output_string()
+    assert func[5] == test_utils.return_string()
+    assert len(func) == 6
+
+
+def test_record_output_when_true_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, record_output=True)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("h", 0)
+    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[2] == test_utils.array_start_record_output_string()
+    assert func[3] == test_utils.result_record_output_string(0)
+    assert func[4] == test_utils.array_end_record_output_string()
+    assert func[5] == test_utils.return_string()
+    assert len(func) == 6
+
+
+def test_record_output_when_false_mapped_correctly():
+    circuit = QuantumCircuit(1, 1)
+    circuit.h(0)
+    circuit.measure(0, 0)
+
+    ir = to_qir(circuit, record_output=False)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("h", 0)
+    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3

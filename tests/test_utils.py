@@ -14,38 +14,51 @@ def _find_line(qir: List[str], prefix: str, err: str) -> str:
     assert err
 
 
-def _qubit_string(qubit: int) -> str:
+def _qubit_string(qubit: int, static_alloc=True) -> str:
+    if static_alloc == False:
+        return f"%Qubit* %qubit{qubit}"
+
     if qubit == 0:
         return "%Qubit* null"
     else:
         return f"%Qubit* inttoptr (i64 {qubit} to %Qubit*)"
 
 
-def _result_string(res: int) -> str:
+def _result_string(res: int, static_alloc=True) -> str:
+    if static_alloc == False:
+        return f"%Result* %result{res}"
+
     if res == 0:
         return "%Result* null"
     else:
         return f"%Result* inttoptr (i64 {res} to %Result*)"
 
+def allocate_qubit(qb: int) -> str:
+    return f"%qubit{qb} = call %Qubit* @__quantum__rt__qubit_allocate()"
 
-def single_op_call_string(name: str, qb: int) -> str:
-    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)})"
+def release_qubit(qb: int) -> str:
+    return f"call void @__quantum__rt__qubit_release({_qubit_string(qb, static_alloc=False)})"
 
+def single_op_call_string(name: str, qb: int, static_alloc=True) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_alloc)})"
 
-def adj_op_call_string(name: str, qb: int) -> str:
-    return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb)})"
-
-
-def double_op_call_string(name: str, qb1: int, qb2: int) -> str:
-    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb1)}, {_qubit_string(qb2)})"
-
-
-def rotation_call_string(name: str, theta: float, qb: int) -> str:
-    return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb)})"
+def adj_op_call_string(name: str, qb: int, static_alloc=True) -> str:
+    return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb, static_alloc)})"
 
 
-def measure_call_string(name: str, res: str, qb: int) -> str:
-    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)}, {_result_string(res)})"
+def double_op_call_string(name: str, qb1: int, qb2: int, static_alloc=True) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb1, static_alloc)}, {_qubit_string(qb2, static_alloc)})"
+
+
+def rotation_call_string(name: str, theta: float, qb: int, static_alloc=True) -> str:
+    return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb, static_alloc)})"
+
+
+def measure_call_string(name: str, res: str, qb: int, static_qubit_alloc=True, static_result_alloc=True) -> str:
+    if static_result_alloc:
+        return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)}, {_result_string(res, static_result_alloc)})"
+    else:
+        return f"%result{res} = call %Result* @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)})"
 
 
 def return_string() -> str:
@@ -60,8 +73,8 @@ def array_end_record_output_string() -> str:
     return f"call void @__quantum__rt__array_end_record_output()"
 
 
-def result_record_output_string(res: str) -> str:
-    return f"call void @__quantum__rt__result_record_output({_result_string(res)})"
+def result_record_output_string(res: str, static_alloc=True) -> str:
+    return f"call void @__quantum__rt__result_record_output({_result_string(res, static_alloc)})"
 
 
 def find_function(qir: List[str]) -> List[str]:
