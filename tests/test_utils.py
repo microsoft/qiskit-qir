@@ -60,6 +60,8 @@ def measure_call_string(name: str, res: str, qb: int, static_qubit_alloc=True, s
     else:
         return f"%result{res} = call %Result* @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)})"
 
+def equal(var: str, res: str):
+    return f"%{var} = call i1 @__quantum__qis__read_result__body({_result_string(res)})"
 
 def return_string() -> str:
     return "ret void"

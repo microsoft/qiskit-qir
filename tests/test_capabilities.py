@@ -100,8 +100,16 @@ def use_conditional_branch_on_single_register_false_value():
 
     return circuit
 
-# Create override visitor which allows us to vary the
-# codegen behavior
+
+def conditional_branch_on_bit():
+    qr = QuantumRegister(2, "qreg")
+    cr = ClassicalRegister(2, "creg")
+    circuit = QuantumCircuit(qr, cr, name="conditional_branch_on_bit")
+    circuit.x(0)
+    circuit.measure(0, 0)
+    circuit.x(1).c_if(cr[0], 1)
+    circuit.measure(1, 1)
+    return circuit
 
 
 class ConfigurableQisVisitor(BasicQisVisitor):
@@ -167,10 +175,15 @@ def test_branching_on_measurement_fails_without_required_capability(matrix):
     assert exception_raised.instruction_string == "if(creg[2] == False) x qreg[1]"
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_passses_with_required_capability(matrix):
+def test_branching_on_measurement_register_passses_with_required_capability(matrix):
     circuit = teleport()
     _ = matrix_to_qir(circuit, matrix)
 
+
+@pytest.mark.parametrize("matrix", static_generator_variations)
+def test_branching_on_measurement_bit_passses_with_required_capability(matrix):
+    circuit = conditional_branch_on_bit()
+    _ = matrix_to_qir(circuit, matrix)
 
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_reuse_after_measurement_fails_without_required_capability(matrix):
