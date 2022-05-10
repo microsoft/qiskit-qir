@@ -3,7 +3,7 @@
 # Licensed under the MIT License.
 ##
 from qiskit_qir.translate import to_qir
-from qiskit import ClassicalRegister, QuantumCircuit
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 
 import test_utils
 
@@ -49,6 +49,74 @@ def test_no_measure_with_register():
     assert func[3] == test_utils.array_end_record_output_string()
     assert func[4] == test_utils.return_string()
     assert len(func) == 5
+
+
+def test_branching_on_bit_emits_correct_ir():
+    qr = QuantumRegister(1, "qreg")
+    cr = ClassicalRegister(1, "creg")
+    circuit = QuantumCircuit(qr, cr, name="branching_on_bit_emits_correct_ir")
+    circuit.x(0)
+    circuit.measure(0, 0)
+    circuit.x(0).c_if(cr[0], 1)
+
+    ir = to_qir(circuit)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("x", 0)
+    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[2] == test_utils.equal("equal", 0)
+    assert func[3] == f"br i1 %equal, label %then, label %else"
+    assert func[4] == ''
+    assert func[5] == f"then:                                             ; preds = %entry"
+    assert func[6] == test_utils.single_op_call_string("x", 0)
+    assert func[7] == f"br label %continue"
+    assert func[8] == ''
+    assert func[9] == f"else:                                             ; preds = %entry"
+    assert func[10] == f"br label %continue"
+    assert func[11] == ''
+    assert func[12] == f"continue:                                         ; preds = %else, %then"
+    assert func[13] == test_utils.array_start_record_output_string()
+    assert func[14] == test_utils.result_record_output_string(0)
+    assert func[15] == test_utils.array_end_record_output_string()
+    assert func[16] == test_utils.return_string()
+
+    assert len(func) == 17
+
+
+def test_branching_on_register_with_one_bit_emits_correct_ir():
+    qr = QuantumRegister(1, "qreg")
+    cr = ClassicalRegister(1, "creg")
+    circuit = QuantumCircuit(qr, cr, name="branching_on_register_with_one_bit_emits_correct_ir")
+    circuit.x(0)
+    circuit.measure(0, 0)
+    circuit.x(0).c_if(cr, 1)
+
+    ir = to_qir(circuit)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 1)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("x", 0)
+    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[2] == test_utils.equal("equal", 0)
+    assert func[3] == f"br i1 %equal, label %then, label %else"
+    assert func[4] == ''
+    assert func[5] == f"then:                                             ; preds = %entry"
+    assert func[6] == test_utils.single_op_call_string("x", 0)
+    assert func[7] == f"br label %continue"
+    assert func[8] == ''
+    assert func[9] == f"else:                                             ; preds = %entry"
+    assert func[10] == f"br label %continue"
+    assert func[11] == ''
+    assert func[12] == f"continue:                                         ; preds = %else, %then"
+    assert func[13] == test_utils.array_start_record_output_string()
+    assert func[14] == test_utils.result_record_output_string(0)
+    assert func[15] == test_utils.array_end_record_output_string()
+    assert func[16] == test_utils.return_string()
+
+    assert len(func) == 17
 
 
 def test_no_measure_without_registers():
