@@ -9,7 +9,7 @@ from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder, types
-from typing import List
+from typing import List, Union
 
 from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError, QubitUseAfterMeasurementError
 
@@ -168,7 +168,21 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     bit)] for bit in instruction.condition[0]]
 
             # Convert value into a bitstring of the same length as classical register
-            values = format(instruction.condition[1], f'0{len(results)}b')
+            # condition should be a
+            # - tuple (ClassicalRegister, int)
+            # - tuple (Clbit, bool)
+            # - tuple (Clbit, int)
+            if isinstance(instruction.condition[0], Clbit):
+                bit : Clbit = instruction.condition[0]
+                value : Union[int, bool] = instruction.condition[1]
+                if value:
+                    values = '1'
+                else:
+                    values = '0'
+            else:
+                register : ClassicalRegister = instruction.condition[0]
+                value : int = instruction.condition[1]
+                values = format(value, f'0{register.size}b')
 
             # Add branches recursively for each bit in the bitstring
             def __visit():
@@ -192,7 +206,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 else:
                     return __branch
 
-            _branch(zip(conditions, values))()
+            if len(conditions) < len(values):
+                raise ValueError(f"Value {value} is larger than register width {len(conditions)}.")
+
+            # qiskit has the most significant bit on the right, so we
+            # must reverse the bit array for comparisons.
+            _branch(zip(conditions, values[::-1]))()
         elif "measure" == instruction.name or "m" == instruction.name or "mz" == instruction.name:
             for qubit, result in zip(qubits, results):
                 self._measured_qubits[qubit] = True
