@@ -130,7 +130,6 @@ def matrix_to_qir(circuit, matrix: List[bool], profile: str = "AdaptiveProfileEx
     module.accept(visitor)
     return visitor.ir()
 
-
 @pytest.mark.parametrize("matrix", static_generator_variations)
 def test_branching_on_measurement_fails_without_required_capability(matrix):
     circuit = teleport()
