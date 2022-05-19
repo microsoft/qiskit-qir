@@ -34,6 +34,17 @@ def test_single_array():
     assert func[11] == test_utils.return_string()
     assert len(func) == 12
 
+def test_no_measure_with_no_registers():
+    circuit = QuantumCircuit(1, 0)
+    circuit.name = "test_no_measure_with_no_registers"
+    circuit.h(0)
+    generated_qir = to_qir(circuit).splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 0)
+    func = test_utils.find_function(generated_qir)
+    assert func[0] == test_utils.single_op_call_string("h", 0)
+    assert func[1] == test_utils.return_string()
+    assert len(func) == 2
 
 def test_no_measure_with_register():
     circuit = QuantumCircuit(1, 1)
