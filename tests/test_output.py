@@ -134,9 +134,9 @@ def test_no_measure_without_registers():
 
 
 def test_measurement_into_multiple_registers_is_mapped_correctly():
-    cr0 = ClassicalRegister(1, "first")
+    cr0 = ClassicalRegister(2, "first")
     cr1 = ClassicalRegister(3, "second")
-    circuit = QuantumCircuit(4)
+    circuit = QuantumCircuit(5)
     circuit.add_register(cr0)
     circuit.add_register(cr1)
     circuit.name = "measurement_into_multiple_registers"
@@ -146,21 +146,22 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
 
     generated_qir = to_qir(circuit).splitlines()
 
-    test_utils.check_attributes(generated_qir, 4, 4)
+    test_utils.check_attributes(generated_qir, 5, 5)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.measure_call_string("mz", 2, 0)
     assert func[3] == test_utils.array_start_record_output_string()
-    assert func[4] == test_utils.result_record_output_string(0)
-    assert func[5] == test_utils.array_end_record_output_string()
-    assert func[6] == test_utils.array_start_record_output_string()
-    assert func[7] == test_utils.result_record_output_string(3)
-    assert func[8] == test_utils.result_record_output_string(2)
-    assert func[9] == test_utils.result_record_output_string(1)
-    assert func[10] == test_utils.array_end_record_output_string()
-    assert func[11] == test_utils.return_string()
-    assert len(func) == 12
+    assert func[4] == test_utils.result_record_output_string(1)
+    assert func[5] == test_utils.result_record_output_string(0)
+    assert func[6] == test_utils.array_end_record_output_string()
+    assert func[7] == test_utils.array_start_record_output_string()
+    assert func[8] == test_utils.result_record_output_string(4)
+    assert func[9] == test_utils.result_record_output_string(3)
+    assert func[10] == test_utils.result_record_output_string(2)
+    assert func[11] == test_utils.array_end_record_output_string()
+    assert func[12] == test_utils.return_string()
+    assert len(func) == 13
 
 
 def test_use_static_qubit_alloc_is_mapped_correctly():
