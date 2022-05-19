@@ -27,9 +27,9 @@ def test_single_array():
     assert func[4] == test_utils.measure_call_string("mz", 0, 1)
     assert func[5] == test_utils.measure_call_string("mz", 1, 2)
     assert func[6] == test_utils.array_start_record_output_string()
-    assert func[7] == test_utils.result_record_output_string(0)
+    assert func[7] == test_utils.result_record_output_string(2)
     assert func[8] == test_utils.result_record_output_string(1)
-    assert func[9] == test_utils.result_record_output_string(2)
+    assert func[9] == test_utils.result_record_output_string(0)
     assert func[10] == test_utils.array_end_record_output_string()
     assert func[11] == test_utils.return_string()
     assert len(func) == 12
@@ -155,9 +155,9 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     assert func[4] == test_utils.result_record_output_string(0)
     assert func[5] == test_utils.array_end_record_output_string()
     assert func[6] == test_utils.array_start_record_output_string()
-    assert func[7] == test_utils.result_record_output_string(1)
+    assert func[7] == test_utils.result_record_output_string(3)
     assert func[8] == test_utils.result_record_output_string(2)
-    assert func[9] == test_utils.result_record_output_string(3)
+    assert func[9] == test_utils.result_record_output_string(1)
     assert func[10] == test_utils.array_end_record_output_string()
     assert func[11] == test_utils.return_string()
     assert len(func) == 12

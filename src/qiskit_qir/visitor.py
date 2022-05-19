@@ -101,13 +101,13 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 [types.RESULT], types.VOID)
         )
 
-        logical_id = 0
+        logical_id_base = 0
         for size in module.reg_sizes:
             self._module.builder.call(array_start_record_output, [])
-            for _ in range(size):
-                result_ref = self._module.results[logical_id]
-                logical_id += 1
+            for index in range(size - 1, -1, -1):
+                result_ref = self._module.results[logical_id_base + index]
                 self._module.builder.call(result_record_output, [result_ref])
+            logical_id_base += size
             self._module.builder.call(array_end_record_output, [])
 
     def visit_register(self, register):
