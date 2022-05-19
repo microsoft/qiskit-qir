@@ -101,6 +101,11 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 [types.RESULT], types.VOID)
         )
 
+        # qiskit inverts the ordering of the results within each register
+        # but keeps the overall register ordering
+        # here we logically loop from n-1 to 0, decrementing in order to
+        # invert the register output. The second parameter is an exclusive
+        # range so we need to go to -1 instead of 0
         logical_id_base = 0
         for size in module.reg_sizes:
             self._module.builder.call(array_start_record_output, [])
