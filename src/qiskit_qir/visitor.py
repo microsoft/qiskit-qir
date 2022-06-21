@@ -54,7 +54,7 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, profile: str = "AdaptiveProfileExecution", kwargs = {}):
+    def __init__(self, profile: str = "AdaptiveExecution", kwargs = {}):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
@@ -282,9 +282,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
     def _map_profile_to_capabilities(self, profile: str):
         value = profile.strip().lower()
-        if "BaseProfileExecution".lower() == value:
+        if "BasicExecution".lower() == value:
             return Capability.NONE
-        elif "AdaptiveProfileExecution".lower() == value:
+        elif "AdaptiveExecution".lower() == value:
             return Capability.ALL
         else:
             raise UnsupportedOperation(f"The supplied profile is not supported: {profile}.")
