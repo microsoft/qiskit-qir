@@ -288,3 +288,45 @@ def test_record_output_when_false_mapped_correctly():
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.return_string()
     assert len(func) == 3
+
+def test_ccx_when_ccx_disabled():
+    circuit = QuantumCircuit(3)
+    circuit.ccx(0, 1, 2)
+
+    ir = to_qir(circuit, support_ccx=False)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 3, 0)
+    func = test_utils.find_function(generated_qir)
+
+    assert func[0] == test_utils.single_op_call_string("h", 2)
+    assert func[1] == test_utils.double_op_call_string("cnot", 1, 2)
+    assert func[2] == test_utils.adj_op_call_string("t", 2)
+    assert func[3] == test_utils.double_op_call_string("cnot", 0, 2)
+    assert func[4] == test_utils.single_op_call_string("t", 2)
+    assert func[5] == test_utils.double_op_call_string("cnot", 1, 2)
+    assert func[6] == test_utils.adj_op_call_string("t", 2)
+    assert func[7] == test_utils.double_op_call_string("cnot", 0, 2)
+    assert func[8] == test_utils.single_op_call_string("t", 1)
+    assert func[9] == test_utils.single_op_call_string("t", 2)
+    assert func[10] == test_utils.single_op_call_string("h", 2)
+    assert func[11] == test_utils.double_op_call_string("cnot", 0, 1)
+    assert func[12] == test_utils.single_op_call_string("t", 0)
+    assert func[13] == test_utils.adj_op_call_string("t", 1)
+    assert func[14] == test_utils.double_op_call_string("cnot", 0, 1)
+    assert func[15] == test_utils.return_string()
+    assert len(func) == 16
+
+def test_ccx_when_ccx_enabled():
+    circuit = QuantumCircuit(3)
+    circuit.ccx(0, 1, 2)
+
+    ir = to_qir(circuit, support_ccx=True)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 3, 0)
+    func = test_utils.find_function(generated_qir)
+
+    assert func[0] == test_utils.generic_op_call_string("ccnot", [0, 1, 2])
+    assert func[1] == test_utils.return_string()
+    assert len(func) == 2

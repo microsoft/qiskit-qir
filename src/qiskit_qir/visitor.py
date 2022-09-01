@@ -19,6 +19,7 @@ QUANTUM_INSTRUCTIONS = [
     "measure",
     "m",
     "cx",
+    "ccx",
     "cz",
     "h",
     "reset",
@@ -65,6 +66,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
         self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
         self._record_output = kwargs.get("record_output", True)
+        self._use_ccx = kwargs.get("support_ccx", False)
 
     def visit_qiskit_module(self, module):
         _log.debug(
@@ -78,6 +80,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._module.use_static_result_alloc(self._use_static_result_alloc)
 
         self._builder = BasicQisBuilder(self._module.builder)
+        if self._use_ccx:
+            self._ccx = self.ccx_instruction()
 
     def record_output(self, module):
         if self._record_output == False:
@@ -114,6 +118,14 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self._module.builder.call(result_record_output, [result_ref])
             logical_id_base += size
             self._module.builder.call(array_end_record_output, [])
+
+    def ccx_instruction(self):
+        """Creates a CCX instruction for QIR"""
+        ccnot = self._module.add_external_function(
+            "__quantum__qis__ccnot__body", types.Function(
+                [types.QUBIT, types.QUBIT, types.QUBIT], types.VOID))
+
+        return ccnot
 
     def visit_register(self, register):
         _log.debug(f"Visiting register '{register.name}'")
@@ -266,6 +278,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # See: https://github.com/qir-alliance/pyqir/issues/74
                 self._builder.x(self._module.qubits[0])
                 self._builder.x(self._module.qubits[0])
+            elif "ccx" == instruction.name and self._use_ccx:
+                self._module.builder.call(self._ccx, qubits)
             elif instruction.definition:
                 _log.debug(
                     f"About to process composite instruction {instruction.name} with qubits {qargs}")
