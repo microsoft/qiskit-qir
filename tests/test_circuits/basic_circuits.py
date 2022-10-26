@@ -64,7 +64,7 @@ def teleport_with_subroutine():
     return circuit
 
 @pytest.fixture()
-def bernstein_vazirani_with_barriers():
+def bernstein_vazirani_with_delay():
     num_qubits = 5
     qq = QuantumRegister(num_qubits+1, name="qq")
     cr = ClassicalRegister(num_qubits, name="cr")
@@ -77,7 +77,7 @@ def bernstein_vazirani_with_barriers():
     for index in range(num_qubits):
         circuit.h(index)
 
-    circuit.barrier()
+    circuit.delay(42, qq[0], "ps")
 
     oracle = format(2, 'b').zfill(num_qubits)
     oracle = oracle[::-1]
@@ -87,7 +87,7 @@ def bernstein_vazirani_with_barriers():
         else:
             circuit.cx(index, num_qubits)
 
-    circuit.barrier()
+    circuit.delay(23, 2, "ms")
 
     for index in range(num_qubits):
         circuit.h(index)
