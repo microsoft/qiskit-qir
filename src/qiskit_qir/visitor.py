@@ -18,8 +18,6 @@ _log = logging.getLogger(name=__name__)
 QUANTUM_INSTRUCTIONS = [
     "measure",
     "m",
-    "barrier",
-    "ccx",
     "cx",
     "cz",
     "h",
@@ -29,7 +27,6 @@ QUANTUM_INSTRUCTIONS = [
     "rz",
     "s",
     "sdg",
-    "swap",
     "t",
     "tdg",
     "x",
@@ -39,6 +36,7 @@ QUANTUM_INSTRUCTIONS = [
 ]
 
 NOOP_INSTRUCTIONS = [
+    "barrier",
     "delay",
 ]
 
@@ -80,18 +78,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._module.use_static_result_alloc(self._use_static_result_alloc)
 
         self._builder = BasicQisBuilder(self._module.builder)
-
-        self._barrier = self._module.add_external_function(
-            "__quantum__qis__barrier__body", types.Function([], types.VOID)
-        )
-        self._ccx = self._module.add_external_function(
-            "__quantum__qis__ccnot__body",
-            types.Function([types.QUBIT, types.QUBIT, types.QUBIT], types.VOID),
-        )
-        self._swap = self._module.add_external_function(
-            "__quantum__qis__swap__body",
-            types.Function([types.QUBIT, types.QUBIT], types.VOID),
-        )
 
     def record_output(self, module):
         if self._record_output == False:
@@ -245,13 +231,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     if any(map(self._measured_qubits.get, qubits)):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
             if "barrier" == instruction.name:
-                self._module.builder.call(self._barrier, [])
+                pass
             elif "delay" == instruction.name:
                 pass
-            elif "swap" == instruction.name:
-                self._module.builder.call(self._swap, qubits)
-            elif "ccx" == instruction.name:
-                self._module.builder.call(self._ccx, qubits)
             elif "cx" == instruction.name:
                 self._builder.cx(*qubits)
             elif "cz" == instruction.name:

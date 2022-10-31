@@ -13,7 +13,7 @@ from qiskit_qir.translate import to_qir, to_qir_bitcode
 
 from test_circuits import core_tests, noop_tests
 from test_circuits.control_flow_circuits import cf_fixtures
-from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_tests, double_op_tests, triple_op_tests, measurement_tests
+from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_tests, double_op_tests, measurement_tests
 
 import test_utils
 
@@ -120,15 +120,6 @@ def test_double_qubit_gates(circuit_name, request):
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
 
-@pytest.mark.parametrize("circuit_name", triple_op_tests)
-def test_triple_qubit_gates(circuit_name, request):
-    qir_op, circuit = request.getfixturevalue(circuit_name)
-    generated_qir = to_qir(circuit).splitlines()
-    test_utils.check_attributes(generated_qir, 3, 0)
-    func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.generic_op_call_string(qir_op, [2, 0, 1])
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
 
 @pytest.mark.parametrize("circuit_name", measurement_tests)
 def test_measurement(circuit_name, request):
