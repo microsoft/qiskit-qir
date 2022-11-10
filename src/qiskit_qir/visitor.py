@@ -11,7 +11,11 @@ from qiskit.circuit.instruction import Instruction
 from pyqir.generator import SimpleModule, BasicQisBuilder, types
 from typing import List, Union
 
-from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError, QubitUseAfterMeasurementError
+from qiskit_qir.capability import (
+    Capability,
+    ConditionalBranchingOnResultError,
+    QubitUseAfterMeasurementError,
+)
 
 _log = logging.getLogger(name=__name__)
 
@@ -20,7 +24,7 @@ _log = logging.getLogger(name=__name__)
 # To work around this we are using an additional list to replace
 # this list which contains the instructions that we can process.
 # This following three variables can be removed in a future
-# release after dependency version restrictions have been applied. 
+# release after dependency version restrictions have been applied.
 SUPPORTED_INSTRUCTIONS = [
     "barrier",
     "delay",
@@ -40,7 +44,7 @@ SUPPORTED_INSTRUCTIONS = [
     "x",
     "y",
     "z",
-    "id"
+    "id",
 ]
 
 _QUANTUM_INSTRUCTIONS = [
@@ -63,12 +67,10 @@ _QUANTUM_INSTRUCTIONS = [
     "tdg",
     "x",
     "y",
-    "z"
+    "z",
 ]
 
-_NOOP_INSTRUCTIONS = [
-    "delay"
-]
+_NOOP_INSTRUCTIONS = ["delay"]
 
 _SUPPORTED_INSTRUCTIONS = _QUANTUM_INSTRUCTIONS + _NOOP_INSTRUCTIONS
 
@@ -84,7 +86,7 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, profile: str = "AdaptiveExecution", kwargs = {}):
+    def __init__(self, profile: str = "AdaptiveExecution", kwargs={}):
         self._module = None
         self._builder = None
         self._qubit_labels = {}
@@ -98,7 +100,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
     def visit_qiskit_module(self, module):
         _log.debug(
-            f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})")
+            f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})"
+        )
         self._module = SimpleModule(
             name=module.name,
             num_qubits=module.num_qubits,
@@ -127,20 +130,18 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
         # produces output records of exactly "RESULT ARRAY_START"
         array_start_record_output = self._module.add_external_function(
-            "__quantum__rt__array_start_record_output", types.Function(
-                [], types.VOID)
+            "__quantum__rt__array_start_record_output", types.Function([], types.VOID)
         )
 
         # produces output records of exactly "RESULT ARRAY_END"
         array_end_record_output = self._module.add_external_function(
-            "__quantum__rt__array_end_record_output", types.Function(
-                [], types.VOID)
+            "__quantum__rt__array_end_record_output", types.Function([], types.VOID)
         )
 
         # produces output records of exactly "RESULT 0" or "RESULT 1"
         result_record_output = self._module.add_external_function(
-            "__quantum__rt__result_record_output", types.Function(
-                [types.RESULT], types.VOID)
+            "__quantum__rt__result_record_output",
+            types.Function([types.RESULT], types.VOID),
         )
 
         # qiskit inverts the ordering of the results within each register
@@ -160,34 +161,42 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
     def visit_register(self, register):
         _log.debug(f"Visiting register '{register.name}'")
         if isinstance(register, QuantumRegister):
-            self._qubit_labels.update({
-                bit: n + len(self._qubit_labels) for n, bit in enumerate(register)
-            })
+            self._qubit_labels.update(
+                {bit: n + len(self._qubit_labels) for n, bit in enumerate(register)}
+            )
             _log.debug(
-                f"Added labels for qubits {[bit for n, bit in enumerate(register)]}")
+                f"Added labels for qubits {[bit for n, bit in enumerate(register)]}"
+            )
         elif isinstance(register, ClassicalRegister):
-            self._clbit_labels.update({
-                bit: n + len(self._clbit_labels) for n, bit in enumerate(register)
-            })
+            self._clbit_labels.update(
+                {bit: n + len(self._clbit_labels) for n, bit in enumerate(register)}
+            )
         else:
-            raise ValueError(
-                f"Register of type {type(register)} not supported.")
+            raise ValueError(f"Register of type {type(register)} not supported.")
 
-    def process_composite_instruction(self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]):
+    def process_composite_instruction(
+        self, instruction: Instruction, qargs: List[Qubit], cargs: List[Clbit]
+    ):
         subcircuit = instruction.definition
         _log.debug(
-            f"Processing composite instruction {instruction.name} with qubits {qargs}")
+            f"Processing composite instruction {instruction.name} with qubits {qargs}"
+        )
         if len(qargs) != subcircuit.num_qubits:
-            raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of qubits; \
-{subcircuit.num_qubits} expected, {len(qargs)} provided")
+            raise ValueError(
+                f"Composite instruction {instruction.name} called with the wrong number of qubits; \
+{subcircuit.num_qubits} expected, {len(qargs)} provided"
+            )
         if len(cargs) != subcircuit.num_clbits:
-            raise ValueError(f"Composite instruction {instruction.name} called with the wrong number of classical bits; \
-{subcircuit.num_clbits} expected, {len(cargs)} provided")
+            raise ValueError(
+                f"Composite instruction {instruction.name} called with the wrong number of classical bits; \
+{subcircuit.num_clbits} expected, {len(cargs)} provided"
+            )
         for (inst, i_qargs, i_cargs) in subcircuit.data:
             mapped_qbits = [qargs[subcircuit.qubits.index(i)] for i in i_qargs]
             mapped_clbits = [cargs[subcircuit.clbits.index] for i in i_cargs]
             _log.debug(
-                f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}")
+                f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}"
+            )
             self.visit_instruction(inst, mapped_qbits, mapped_clbits)
 
     def visit_instruction(self, instruction, qargs, cargs, skip_condition=False):
@@ -196,8 +205,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         qubits = [self._module.qubits[n] for n in qlabels]
         results = [self._module.results[n] for n in clabels]
 
-        if (instruction.condition is not None) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
-            raise ConditionalBranchingOnResultError(instruction, qargs, cargs, self._profile)
+        if (
+            instruction.condition is not None
+        ) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
+            raise ConditionalBranchingOnResultError(
+                instruction, qargs, cargs, self._profile
+            )
 
         labels = ", ".join([str(l) for l in qlabels + clabels])
         if instruction.condition is None or skip_condition:
@@ -205,14 +218,17 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
         if instruction.condition is not None and skip_condition is False:
             _log.debug(
-                f"Visiting condition for instruction '{instruction.name}' ({labels})")
+                f"Visiting condition for instruction '{instruction.name}' ({labels})"
+            )
 
             if isinstance(instruction.condition[0], Clbit):
                 bit_label = self._clbit_labels.get(instruction.condition[0])
                 conditions = [self._module.results[bit_label]]
             else:
-                conditions = [self._module.results[self._clbit_labels.get(
-                    bit)] for bit in instruction.condition[0]]
+                conditions = [
+                    self._module.results[self._clbit_labels.get(bit)]
+                    for bit in instruction.condition[0]
+                ]
 
             # Convert value into a bitstring of the same length as classical register
             # condition should be a
@@ -220,21 +236,20 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             # - tuple (Clbit, bool)
             # - tuple (Clbit, int)
             if isinstance(instruction.condition[0], Clbit):
-                bit : Clbit = instruction.condition[0]
-                value : Union[int, bool] = instruction.condition[1]
+                bit: Clbit = instruction.condition[0]
+                value: Union[int, bool] = instruction.condition[1]
                 if value:
-                    values = '1'
+                    values = "1"
                 else:
-                    values = '0'
+                    values = "0"
             else:
-                register : ClassicalRegister = instruction.condition[0]
-                value : int = instruction.condition[1]
-                values = format(value, f'0{register.size}b')
+                register: ClassicalRegister = instruction.condition[0]
+                value: int = instruction.condition[1]
+                values = format(value, f"0{register.size}b")
 
             # Add branches recursively for each bit in the bitstring
             def __visit():
-                self.visit_instruction(
-                    instruction, qargs, cargs, skip_condition=True)
+                self.visit_instruction(instruction, qargs, cargs, skip_condition=True)
 
             def _branch(conditions_values):
                 try:
@@ -243,23 +258,28 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     def __branch():
                         self._builder.if_result(
                             result=result,
-                            one=_branch(
-                                conditions_values) if val == "1" else None,
-                            zero=_branch(
-                                conditions_values) if val == "0" else None
+                            one=_branch(conditions_values) if val == "1" else None,
+                            zero=_branch(conditions_values) if val == "0" else None,
                         )
+
                 except StopIteration:
                     return __visit
                 else:
                     return __branch
 
             if len(conditions) < len(values):
-                raise ValueError(f"Value {value} is larger than register width {len(conditions)}.")
+                raise ValueError(
+                    f"Value {value} is larger than register width {len(conditions)}."
+                )
 
             # qiskit has the most significant bit on the right, so we
             # must reverse the bit array for comparisons.
             _branch(zip(conditions, values[::-1]))()
-        elif "measure" == instruction.name or "m" == instruction.name or "mz" == instruction.name:
+        elif (
+            "measure" == instruction.name
+            or "m" == instruction.name
+            or "mz" == instruction.name
+        ):
             for qubit, result in zip(qubits, results):
                 self._measured_qubits[qubit] = True
                 self._builder.m(qubit, result)
@@ -271,7 +291,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # verify at that time
                 if instruction.name in _SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, qubits)):
-                        raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
+                        raise QubitUseAfterMeasurementError(
+                            instruction, qargs, cargs, self._profile
+                        )
             if "barrier" == instruction.name:
                 self._module.builder.call(self._barrier, [])
             elif "delay" == instruction.name:
@@ -314,11 +336,14 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self._builder.x(self._module.qubits[0])
             elif instruction.definition:
                 _log.debug(
-                    f"About to process composite instruction {instruction.name} with qubits {qargs}")
+                    f"About to process composite instruction {instruction.name} with qubits {qargs}"
+                )
                 self.process_composite_instruction(instruction, qargs, cargs)
             else:
-                raise ValueError(f"Gate {instruction.name} is not supported. \
-    Please transpile using the list of supported gates: {_SUPPORTED_INSTRUCTIONS}.")
+                raise ValueError(
+                    f"Gate {instruction.name} is not supported. \
+    Please transpile using the list of supported gates: {_SUPPORTED_INSTRUCTIONS}."
+                )
 
     def ir(self) -> str:
         return self._module.ir()
@@ -333,4 +358,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         elif "AdaptiveExecution".lower() == value:
             return Capability.ALL
         else:
-            raise UnsupportedOperation(f"The supplied profile is not supported: {profile}.")
+            raise UnsupportedOperation(
+                f"The supplied profile is not supported: {profile}."
+            )

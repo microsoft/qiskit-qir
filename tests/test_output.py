@@ -34,6 +34,7 @@ def test_single_array():
     assert func[11] == test_utils.return_string()
     assert len(func) == 12
 
+
 def test_no_measure_with_no_registers():
     circuit = QuantumCircuit(1, 0)
     circuit.name = "test_no_measure_with_no_registers"
@@ -45,6 +46,7 @@ def test_no_measure_with_no_registers():
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
+
 
 def test_no_measure_with_register():
     circuit = QuantumCircuit(1, 1)
@@ -79,15 +81,22 @@ def test_branching_on_bit_emits_correct_ir():
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("equal", 0)
     assert func[3] == f"br i1 %equal, label %then, label %else"
-    assert func[4] == ''
-    assert func[5] == f"then:                                             ; preds = %entry"
+    assert func[4] == ""
+    assert (
+        func[5] == f"then:                                             ; preds = %entry"
+    )
     assert func[6] == test_utils.single_op_call_string("x", 0)
     assert func[7] == f"br label %continue"
-    assert func[8] == ''
-    assert func[9] == f"else:                                             ; preds = %entry"
+    assert func[8] == ""
+    assert (
+        func[9] == f"else:                                             ; preds = %entry"
+    )
     assert func[10] == f"br label %continue"
-    assert func[11] == ''
-    assert func[12] == f"continue:                                         ; preds = %else, %then"
+    assert func[11] == ""
+    assert (
+        func[12]
+        == f"continue:                                         ; preds = %else, %then"
+    )
     assert func[13] == test_utils.array_start_record_output_string()
     assert func[14] == test_utils.result_record_output_string(0)
     assert func[15] == test_utils.array_end_record_output_string()
@@ -99,7 +108,9 @@ def test_branching_on_bit_emits_correct_ir():
 def test_branching_on_register_with_one_bit_emits_correct_ir():
     qr = QuantumRegister(1, "qreg")
     cr = ClassicalRegister(1, "creg")
-    circuit = QuantumCircuit(qr, cr, name="branching_on_register_with_one_bit_emits_correct_ir")
+    circuit = QuantumCircuit(
+        qr, cr, name="branching_on_register_with_one_bit_emits_correct_ir"
+    )
     circuit.x(0)
     circuit.measure(0, 0)
     circuit.x(0).c_if(cr, 1)
@@ -113,15 +124,22 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("equal", 0)
     assert func[3] == f"br i1 %equal, label %then, label %else"
-    assert func[4] == ''
-    assert func[5] == f"then:                                             ; preds = %entry"
+    assert func[4] == ""
+    assert (
+        func[5] == f"then:                                             ; preds = %entry"
+    )
     assert func[6] == test_utils.single_op_call_string("x", 0)
     assert func[7] == f"br label %continue"
-    assert func[8] == ''
-    assert func[9] == f"else:                                             ; preds = %entry"
+    assert func[8] == ""
+    assert (
+        func[9] == f"else:                                             ; preds = %entry"
+    )
     assert func[10] == f"br label %continue"
-    assert func[11] == ''
-    assert func[12] == f"continue:                                         ; preds = %else, %then"
+    assert func[11] == ""
+    assert (
+        func[12]
+        == f"continue:                                         ; preds = %else, %then"
+    )
     assert func[13] == test_utils.array_start_record_output_string()
     assert func[14] == test_utils.result_record_output_string(0)
     assert func[15] == test_utils.array_end_record_output_string()
@@ -187,7 +205,9 @@ def test_use_static_qubit_alloc_is_mapped_correctly():
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.allocate_qubit(0)
     assert func[1] == test_utils.single_op_call_string("h", 0, static_alloc=False)
-    assert func[2] == test_utils.measure_call_string("mz", 0, 0, static_qubit_alloc=False)
+    assert func[2] == test_utils.measure_call_string(
+        "mz", 0, 0, static_qubit_alloc=False
+    )
     assert func[3] == test_utils.array_start_record_output_string()
     assert func[4] == test_utils.result_record_output_string(0)
     assert func[5] == test_utils.array_end_record_output_string()
@@ -207,7 +227,9 @@ def test_use_static_result_alloc_is_mapped_correctly():
     test_utils.check_attributes(generated_qir, 1, -1)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.measure_call_string("m", 0, 0, static_result_alloc=False)
+    assert func[1] == test_utils.measure_call_string(
+        "m", 0, 0, static_result_alloc=False
+    )
     assert func[2] == test_utils.array_start_record_output_string()
     assert func[3] == test_utils.result_record_output_string(0, static_alloc=False)
     assert func[4] == test_utils.array_end_record_output_string()
@@ -227,7 +249,9 @@ def test_using_both_static_allocs_false_is_mapped_correctly():
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.allocate_qubit(0)
     assert func[1] == test_utils.single_op_call_string("h", 0, static_alloc=False)
-    assert func[2] == test_utils.measure_call_string("m", 0, 0, static_qubit_alloc=False, static_result_alloc=False)
+    assert func[2] == test_utils.measure_call_string(
+        "m", 0, 0, static_qubit_alloc=False, static_result_alloc=False
+    )
     assert func[3] == test_utils.array_start_record_output_string()
     assert func[4] == test_utils.result_record_output_string(0, static_alloc=False)
     assert func[5] == test_utils.array_end_record_output_string()
@@ -289,6 +313,7 @@ def test_record_output_when_false_mapped_correctly():
     assert func[2] == test_utils.return_string()
     assert len(func) == 3
 
+
 def test_barrier():
     circuit = QuantumCircuit(1)
     circuit.barrier()
@@ -302,6 +327,7 @@ def test_barrier():
     assert func[0] == test_utils.generic_op_call_string("barrier", [])
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
+
 
 def test_barrier_with_qubits():
     circuit = QuantumCircuit(3)
@@ -317,6 +343,7 @@ def test_barrier_with_qubits():
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
 
+
 def test_swap():
     circuit = QuantumCircuit(3)
     circuit.swap(2, 0)
@@ -330,6 +357,7 @@ def test_swap():
     assert func[0] == test_utils.double_op_call_string("swap", 2, 0)
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
+
 
 def test_ccx():
     circuit = QuantumCircuit(3)

@@ -14,7 +14,4 @@ core_tests = [
     "teleport_with_subroutine",
 ] + random_fixtures
 
-noop_tests = [
-    "bernstein_vazirani_with_delay",
-    "ghz_with_delay"
-]
+noop_tests = ["bernstein_vazirani_with_delay", "ghz_with_delay"]
