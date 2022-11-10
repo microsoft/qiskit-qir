@@ -63,6 +63,10 @@ def measure_call_string(name: str, res: str, qb: int, static_qubit_alloc=True, s
 def equal(var: str, res: str):
     return f"%{var} = call i1 @__quantum__qis__read_result__body({_result_string(res)})"
 
+def generic_op_call_string(name: str, qbs: List[int], static_alloc=True) -> str:
+    args = ", ".join(_qubit_string(qb, static_alloc) for qb in qbs)
+    return f"call void @__quantum__qis__{name}__body({args})"
+
 def return_string() -> str:
     return "ret void"
 

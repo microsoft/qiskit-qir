@@ -15,6 +15,12 @@ from qiskit_qir.capability import Capability, ConditionalBranchingOnResultError,
 
 _log = logging.getLogger(name=__name__)
 
+# This list cannot change as existing clients hardcoded to it
+# when it wasn't designed to be externally used.
+# To work around this we are using an additional list to replace
+# this list which contains the instructions that we can process.
+# This following three variables can be removed in a future
+# release after dependency version restrictions have been applied. 
 QUANTUM_INSTRUCTIONS = [
     "measure",
     "m",
@@ -41,6 +47,35 @@ NOOP_INSTRUCTIONS = [
 ]
 
 SUPPORTED_INSTRUCTIONS = QUANTUM_INSTRUCTIONS + NOOP_INSTRUCTIONS
+
+_QUANTUM_INSTRUCTIONS = [
+    "barrier",
+    "ccx",
+    "cx",
+    "cz",
+    "h",
+    "id",
+    "m",
+    "measure",
+    "reset",
+    "rx",
+    "ry",
+    "rz",
+    "s",
+    "sdg",
+    "swap",
+    "t",
+    "tdg",
+    "x",
+    "y",
+    "z"
+]
+
+_NOOP_INSTRUCTIONS = [
+    "barrier"
+]
+
+_SUPPORTED_INSTRUCTIONS = _QUANTUM_INSTRUCTIONS + _NOOP_INSTRUCTIONS
 
 
 class QuantumCircuitElementVisitor(metaclass=ABCMeta):
@@ -78,6 +113,18 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._module.use_static_result_alloc(self._use_static_result_alloc)
 
         self._builder = BasicQisBuilder(self._module.builder)
+
+        self._barrier = self._module.add_external_function(
+            "__quantum__qis__barrier__body", types.Function([], types.VOID)
+        )
+        self._ccx = self._module.add_external_function(
+            "__quantum__qis__ccnot__body",
+            types.Function([types.QUBIT, types.QUBIT, types.QUBIT], types.VOID),
+        )
+        self._swap = self._module.add_external_function(
+            "__quantum__qis__swap__body",
+            types.Function([types.QUBIT, types.QUBIT], types.VOID),
+        )
 
     def record_output(self, module):
         if self._record_output == False:
@@ -227,13 +274,17 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # check. If we have a composite instruction then it will call
                 # back into this function with a supported name and we'll
                 # verify at that time
-                if instruction.name in SUPPORTED_INSTRUCTIONS:
+                if instruction.name in _SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, qubits)):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
             if "barrier" == instruction.name:
-                pass
+                self._module.builder.call(self._barrier, [])
             elif "delay" == instruction.name:
                 pass
+            elif "swap" == instruction.name:
+                self._module.builder.call(self._swap, qubits)
+            elif "ccx" == instruction.name:
+                self._module.builder.call(self._ccx, qubits)
             elif "cx" == instruction.name:
                 self._builder.cx(*qubits)
             elif "cz" == instruction.name:
@@ -272,7 +323,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 self.process_composite_instruction(instruction, qargs, cargs)
             else:
                 raise ValueError(f"Gate {instruction.name} is not supported. \
-    Please transpile using the list of supported gates: {SUPPORTED_INSTRUCTIONS}.")
+    Please transpile using the list of supported gates: {_SUPPORTED_INSTRUCTIONS}.")
 
     def ir(self) -> str:
         return self._module.ir()
