@@ -21,7 +21,9 @@ _log = logging.getLogger(name=__name__)
 # this list which contains the instructions that we can process.
 # This following three variables can be removed in a future
 # release after dependency version restrictions have been applied. 
-QUANTUM_INSTRUCTIONS = [
+SUPPORTED_INSTRUCTIONS = [
+    "barrier",
+    "delay",
     "measure",
     "m",
     "cx",
@@ -40,13 +42,6 @@ QUANTUM_INSTRUCTIONS = [
     "z",
     "id"
 ]
-
-NOOP_INSTRUCTIONS = [
-    "barrier",
-    "delay",
-]
-
-SUPPORTED_INSTRUCTIONS = QUANTUM_INSTRUCTIONS + NOOP_INSTRUCTIONS
 
 _QUANTUM_INSTRUCTIONS = [
     "barrier",
@@ -72,7 +67,7 @@ _QUANTUM_INSTRUCTIONS = [
 ]
 
 _NOOP_INSTRUCTIONS = [
-    "barrier"
+    "delay"
 ]
 
 _SUPPORTED_INSTRUCTIONS = _QUANTUM_INSTRUCTIONS + _NOOP_INSTRUCTIONS
