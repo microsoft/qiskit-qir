@@ -8,7 +8,20 @@ from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
-from pyqir.generator import SimpleModule, BasicQisBuilder, types
+from pyqir import (
+    append_basic_block,
+    BasicQisBuilder,
+    Builder,
+    Context,
+    Function,
+    FunctionType,
+    Linkage,
+    Module,
+    Type,
+    create_entry_point,
+    qubit,
+    result,
+)
 from typing import List, Union
 
 from qiskit_qir.capability import (
@@ -89,6 +102,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
     def __init__(self, profile: str = "AdaptiveExecution", kwargs={}):
         self._module = None
         self._builder = None
+        self._qir = None
         self._qubit_labels = {}
         self._clbit_labels = {}
         self._profile = profile
@@ -97,53 +111,80 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
         self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
         self._record_output = kwargs.get("record_output", True)
+        self._barrier = None
+        self._ccx = None
+        self._swap = None
 
     def visit_qiskit_module(self, module):
         _log.debug(
             f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})"
         )
-        self._module = SimpleModule(
-            name=module.name,
-            num_qubits=module.num_qubits,
-            num_results=module.num_clbits,
+        self._module = module.module
+        context = self._module.context
+        entry = create_entry_point(
+            self._module, module.name, module.num_qubits, module.num_clbits
         )
-        self._module.use_static_qubit_alloc(self._use_static_qubit_alloc)
-        self._module.use_static_result_alloc(self._use_static_result_alloc)
-
+        builder = Builder(self._module)
+        block = append_basic_block(context, entry, "")
+        self._builder.set_insert_point(block)
+        self._qis = BasicQisBuilder(builder)
         self._builder = BasicQisBuilder(self._module.builder)
 
-        self._barrier = self._module.add_external_function(
-            "__quantum__qis__barrier__body", types.Function([], types.VOID)
+        void_type = Type.void(context)
+        qubit_type = Type.qubit(self._module)
+
+        self._barrier = Function(
+            FunctionType(void_type, []),
+            Linkage.EXTERNAL,
+            "__quantum__qis__barrier__body",
+            self._module,
         )
-        self._ccx = self._module.add_external_function(
+        self._ccx = Function(
+            FunctionType(void_type, [qubit_type, qubit_type, qubit_type]),
+            Linkage.EXTERNAL,
             "__quantum__qis__ccnot__body",
-            types.Function([types.QUBIT, types.QUBIT, types.QUBIT], types.VOID),
+            self._module,
         )
-        self._swap = self._module.add_external_function(
+        self._swap = Function(
+            FunctionType(void_type, [qubit_type, qubit_type]),
+            Linkage.EXTERNAL,
             "__quantum__qis__swap__body",
-            types.Function([types.QUBIT, types.QUBIT], types.VOID),
+            self._module,
         )
+
+    def finalize(self):
+        self._builder.build_return(None)
 
     def record_output(self, module):
         if self._record_output == False:
             return
 
+        void_type = Type.void(self._module.context)
+        result_type = Type.result(self._module)
+
         # produces output records of exactly "RESULT ARRAY_START"
-        array_start_record_output = self._module.add_external_function(
-            "__quantum__rt__array_start_record_output", types.Function([], types.VOID)
+        array_start_record_output = Function(
+            FunctionType(void_type, []),
+            Linkage.EXTERNAL,
+            "__quantum__rt__array_start_record_output",
+            self._module,
         )
 
         # produces output records of exactly "RESULT ARRAY_END"
-        array_end_record_output = self._module.add_external_function(
-            "__quantum__rt__array_end_record_output", types.Function([], types.VOID)
+        array_end_record_output = Function(
+            FunctionType(void_type, []),
+            Linkage.EXTERNAL,
+            "__quantum__rt__array_end_record_output",
+            self._module,
         )
 
         # produces output records of exactly "RESULT 0" or "RESULT 1"
-        result_record_output = self._module.add_external_function(
+        result_record_output = Function(
+            FunctionType(void_type, [result_type]),
+            Linkage.EXTERNAL,
             "__quantum__rt__result_record_output",
-            types.Function([types.RESULT], types.VOID),
+            self._module,
         )
-
         # qiskit inverts the ordering of the results within each register
         # but keeps the overall register ordering
         # here we logically loop from n-1 to 0, decrementing in order to
@@ -346,7 +387,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 )
 
     def ir(self) -> str:
-        return self._module.ir()
+        return str(self._module)
 
     def bitcode(self) -> bytes:
         return self._module.bitcode()
