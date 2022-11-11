@@ -15,6 +15,6 @@ core_tests = [
 ] + random_fixtures
 
 noop_tests = [
-    "bernstein_vazirani_with_barriers",
+    "bernstein_vazirani_with_delay",
     "ghz_with_delay"
 ]
