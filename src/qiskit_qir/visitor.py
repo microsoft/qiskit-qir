@@ -94,6 +94,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._measured_qubits = {}
         self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
         self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
+        self._emit_barrier_calls = kwargs.get("emit_barrier_calls", False)
         self._record_output = kwargs.get("record_output", True)
 
     def visit_qiskit_module(self, module):
@@ -273,7 +274,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                     if any(map(self._measured_qubits.get, qubits)):
                         raise QubitUseAfterMeasurementError(instruction, qargs, cargs, self._profile)
             if "barrier" == instruction.name:
-                self._module.builder.call(self._barrier, [])
+                if self._emit_barrier_calls:
+                    self._module.builder.call(self._barrier, [])
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:

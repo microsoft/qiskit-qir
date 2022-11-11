@@ -289,11 +289,41 @@ def test_record_output_when_false_mapped_correctly():
     assert func[2] == test_utils.return_string()
     assert len(func) == 3
 
-def test_barrier():
+def test_barrier_default_bypass():
+    circuit = QuantumCircuit(1)
+    circuit.barrier()
+    circuit.x(0)
+
+    ir = to_qir(circuit)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 1, 0)
+    func = test_utils.find_function(generated_qir)
+
+    assert func[0] == test_utils.single_op_call_string("x", 0)
+    assert func[1] == test_utils.return_string()
+    assert len(func) == 2
+
+def test_barrier_with_qubits_default_bypass():
+    circuit = QuantumCircuit(3)
+    circuit.barrier([2, 0, 1])
+    circuit.x(0)
+
+    ir = to_qir(circuit)
+    generated_qir = ir.splitlines()
+
+    test_utils.check_attributes(generated_qir, 3, 0)
+    func = test_utils.find_function(generated_qir)
+
+    assert func[0] == test_utils.single_op_call_string("x", 0)
+    assert func[1] == test_utils.return_string()
+    assert len(func) == 2
+
+def test_barrier_with_override():
     circuit = QuantumCircuit(1)
     circuit.barrier()
 
-    ir = to_qir(circuit)
+    ir = to_qir(circuit, emit_barrier_calls=True)
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
@@ -303,11 +333,11 @@ def test_barrier():
     assert func[1] == test_utils.return_string()
     assert len(func) == 2
 
-def test_barrier_with_qubits():
+def test_barrier_with_qubits_with_override():
     circuit = QuantumCircuit(3)
     circuit.barrier([2, 0, 1])
 
-    ir = to_qir(circuit)
+    ir = to_qir(circuit, emit_barrier_calls=True)
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
