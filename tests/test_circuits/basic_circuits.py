@@ -7,6 +7,7 @@ import pytest
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 
+
 @pytest.fixture()
 def ghz():
     circuit = QuantumCircuit(4, 3)
@@ -14,7 +15,7 @@ def ghz():
     circuit.h(0)
     circuit.cx(0, 1)
     circuit.cx(1, 2)
-    circuit.measure([0,1,2], [0, 1, 2])
+    circuit.measure([0, 1, 2], [0, 1, 2])
 
     return circuit
 
@@ -45,6 +46,7 @@ def unroll():
 
     return circ.decompose()
 
+
 @pytest.fixture()
 def teleport_with_subroutine():
     bell_circ = QuantumCircuit(2, name="CreateBellPair")
@@ -63,10 +65,11 @@ def teleport_with_subroutine():
 
     return circuit
 
+
 @pytest.fixture()
 def bernstein_vazirani_with_delay():
     num_qubits = 5
-    qq = QuantumRegister(num_qubits+1, name="qq")
+    qq = QuantumRegister(num_qubits + 1, name="qq")
     cr = ClassicalRegister(num_qubits, name="cr")
 
     circuit = QuantumCircuit(qq, cr, name="Bernstein-Vazirani")
@@ -79,10 +82,10 @@ def bernstein_vazirani_with_delay():
 
     circuit.delay(42, qq[0], "ps")
 
-    oracle = format(2, 'b').zfill(num_qubits)
+    oracle = format(2, "b").zfill(num_qubits)
     oracle = oracle[::-1]
     for index in range(num_qubits):
-        if oracle[index] == '0':
+        if oracle[index] == "0":
             circuit.i(index)
         else:
             circuit.cx(index, num_qubits)
@@ -97,6 +100,7 @@ def bernstein_vazirani_with_delay():
 
     return circuit
 
+
 @pytest.fixture()
 def ghz_with_delay():
     qq = QuantumRegister(4, name="qq")
@@ -110,6 +114,6 @@ def ghz_with_delay():
     circuit.delay(23, 2, "ms")
     circuit.cx(1, 2)
     circuit.delay(3, qq[1])
-    circuit.measure([0,1,2], [0, 1, 2])
+    circuit.measure([0, 1, 2], [0, 1, 2])
 
     return circuit

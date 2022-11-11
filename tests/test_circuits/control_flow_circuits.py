@@ -6,6 +6,7 @@ import pytest
 
 from qiskit import QuantumCircuit
 
+
 @pytest.fixture()
 def while_loop():
     circuit = QuantumCircuit(1, 1)
@@ -14,6 +15,7 @@ def while_loop():
         circuit.h(0)
         circuit.measure(0, 0)
     return circuit
+
 
 @pytest.fixture()
 def for_loop():
@@ -24,6 +26,7 @@ def for_loop():
         # Qiskit doesn't (yet) support cnot(3, i)
         circuit.cnot(3, 0)
     return circuit
+
 
 @pytest.fixture()
 def if_else():
@@ -42,5 +45,6 @@ def if_else():
         circuit.h(2)
         circuit.z(2)
     return circuit
+
 
 cf_fixtures = ["while_loop", "for_loop", "if_else"]
