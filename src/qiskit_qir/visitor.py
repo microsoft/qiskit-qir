@@ -110,6 +110,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._measured_qubits = {}
         self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
         self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
+        self._emit_barrier_calls = kwargs.get("emit_barrier_calls", False)
         self._record_output = kwargs.get("record_output", True)
         self._barrier = None
         self._ccx = None
@@ -163,6 +164,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         result_type = Type.result(self._module)
 
         # produces output records of exactly "RESULT ARRAY_START"
+
         array_start_record_output = Function(
             FunctionType(void_type, []),
             Linkage.EXTERNAL,
@@ -336,7 +338,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                             instruction, qargs, cargs, self._profile
                         )
             if "barrier" == instruction.name:
-                self._module.builder.call(self._barrier, [])
+                if self._emit_barrier_calls:
+                    self._module.builder.call(self._barrier, [])
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:
