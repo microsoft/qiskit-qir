@@ -33,14 +33,18 @@ def _result_string(res: int, static_alloc=True) -> str:
     else:
         return f"%Result* inttoptr (i64 {res} to %Result*)"
 
+
 def allocate_qubit(qb: int) -> str:
     return f"%qubit{qb} = call %Qubit* @__quantum__rt__qubit_allocate()"
+
 
 def release_qubit(qb: int) -> str:
     return f"call void @__quantum__rt__qubit_release({_qubit_string(qb, static_alloc=False)})"
 
+
 def single_op_call_string(name: str, qb: int, static_alloc=True) -> str:
     return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_alloc)})"
+
 
 def adj_op_call_string(name: str, qb: int, static_alloc=True) -> str:
     return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb, static_alloc)})"
@@ -54,18 +58,23 @@ def rotation_call_string(name: str, theta: float, qb: int, static_alloc=True) ->
     return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb, static_alloc)})"
 
 
-def measure_call_string(name: str, res: str, qb: int, static_qubit_alloc=True, static_result_alloc=True) -> str:
+def measure_call_string(
+    name: str, res: str, qb: int, static_qubit_alloc=True, static_result_alloc=True
+) -> str:
     if static_result_alloc:
         return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)}, {_result_string(res, static_result_alloc)})"
     else:
         return f"%result{res} = call %Result* @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)})"
 
+
 def equal(var: str, res: str):
     return f"%{var} = call i1 @__quantum__qis__read_result__body({_result_string(res)})"
+
 
 def generic_op_call_string(name: str, qbs: List[int], static_alloc=True) -> str:
     args = ", ".join(_qubit_string(qb, static_alloc) for qb in qbs)
     return f"call void @__quantum__qis__{name}__body({args})"
+
 
 def return_string() -> str:
     return "ret void"
@@ -99,16 +108,16 @@ def find_function(qir: List[str]) -> List[str]:
     assert "No main function found"
 
 
-def check_attributes(qir: List[str],
-                     expected_qubits: int = -1,
-                     expected_results: int = -1) -> None:
+def check_attributes(
+    qir: List[str], expected_qubits: int = -1, expected_results: int = -1
+) -> None:
     attr_string = 'attributes #0 = { "EntryPoint"'
     attr_line = _find_line(qir, attr_string, "Missing entry point attribute")
-    chunks = attr_line.split(' ')
+    chunks = attr_line.split(" ")
     actual_qubits = -1
     actual_results = -1
     for chunk in chunks:
-        potential_pair = chunk.split('=')
+        potential_pair = chunk.split("=")
         if len(potential_pair) == 2:
             (name, value) = potential_pair
             if str(name) == '"requiredQubits"':
@@ -116,8 +125,10 @@ def check_attributes(qir: List[str],
             if str(name) == '"requiredResults"':
                 actual_results = int(value.strip('"'))
 
-    assert expected_qubits == actual_qubits, \
-        f"Incorrect qubit count: {expected_qubits} expected, {actual_qubits} actual"
+    assert (
+        expected_qubits == actual_qubits
+    ), f"Incorrect qubit count: {expected_qubits} expected, {actual_qubits} actual"
 
-    assert expected_results == actual_results, \
-        f"Incorrect result count: {expected_results} expected, {actual_results} actual"
+    assert (
+        expected_results == actual_results
+    ), f"Incorrect result count: {expected_results} expected, {actual_results} actual"

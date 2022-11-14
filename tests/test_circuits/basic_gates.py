@@ -9,9 +9,7 @@ from qiskit import QuantumCircuit
 # All of the following dictionaries map from the names of methods on Qiskit QuantumCircuit objects
 # to the name of the equivalent pyqir BasicQisBuilder method
 
-_zero_qubit_operations = {
-    "barrier": "barrier"
-}
+_zero_qubit_operations = {"barrier": "barrier"}
 
 _one_qubit_gates = {
     "h": "h",
@@ -20,36 +18,23 @@ _one_qubit_gates = {
     "t": "t",
     "x": "x",
     "y": "y",
-    "z": "z"
+    "z": "z",
 }
 
-_adj_gates = {
-    "sdg": "s",
-    "tdg": "t"
-}
+_adj_gates = {"sdg": "s", "tdg": "t"}
 
-_measurements = {
-    "measure" : "mz"
-}
+_measurements = {"measure": "mz"}
 
-_rotations = {
-    "rx": "rx",
-    "ry": "ry",
-    "rz": "rz"
-}
+_rotations = {"rx": "rx", "ry": "ry", "rz": "rz"}
 
-_two_qubit_gates = {
-    "cx": "cnot",
-    "cz": "cz",
-    "swap": "swap"
-}
+_two_qubit_gates = {"cx": "cnot", "cz": "cz", "swap": "swap"}
 
-_three_qubit_gates = {
-    "ccx": "ccnot"
-}
+_three_qubit_gates = {"ccx": "ccnot"}
 
-def _fixture_name(s : str) -> str:
+
+def _fixture_name(s: str) -> str:
     return f"Fixture_{s}"
+
 
 def _map_gate_name(gate: str) -> str:
     if gate in _one_qubit_gates:
@@ -69,13 +54,16 @@ def _map_gate_name(gate: str) -> str:
     else:
         raise ValueError(f"Unknown Qiskit gate {gate}")
 
+
 def _generate_one_qubit_fixture(gate: str):
     @pytest.fixture()
     def test_fixture():
         circuit = QuantumCircuit(1)
         getattr(circuit, gate)(0)
         return _map_gate_name(gate), circuit
+
     return test_fixture
+
 
 # Generate simple single-qubit gate fixtures
 for gate in _one_qubit_gates.keys():
@@ -87,18 +75,22 @@ for gate in _adj_gates.keys():
     name = _fixture_name(gate)
     locals()[name] = _generate_one_qubit_fixture(gate)
 
+
 def _generate_rotation_fixture(gate: str):
     @pytest.fixture()
     def test_fixture():
         circuit = QuantumCircuit(1)
         getattr(circuit, gate)(0.5, 0)
         return _map_gate_name(gate), circuit
+
     return test_fixture
+
 
 # Generate rotation gate fixtures
 for gate in _rotations.keys():
     name = _fixture_name(gate)
     locals()[name] = _generate_rotation_fixture(gate)
+
 
 def _generate_two_qubit_fixture(gate: str):
     @pytest.fixture()
@@ -106,12 +98,15 @@ def _generate_two_qubit_fixture(gate: str):
         circuit = QuantumCircuit(2)
         getattr(circuit, gate)(0, 1)
         return _map_gate_name(gate), circuit
+
     return test_fixture
+
 
 # Generate double-qubit gate fixtures
 for gate in _two_qubit_gates.keys():
     name = _fixture_name(gate)
     locals()[name] = _generate_two_qubit_fixture(gate)
+
 
 def _generate_three_qubit_fixture(gate: str):
     @pytest.fixture()
@@ -119,12 +114,15 @@ def _generate_three_qubit_fixture(gate: str):
         circuit = QuantumCircuit(3)
         getattr(circuit, gate)(2, 0, 1)
         return _map_gate_name(gate), circuit
+
     return test_fixture
+
 
 # Generate three-qubit gate fixtures
 for gate in _three_qubit_gates.keys():
     name = _fixture_name(gate)
     locals()[name] = _generate_three_qubit_fixture(gate)
+
 
 def _generate_measurement_fixture(gate: str):
     @pytest.fixture()
@@ -132,7 +130,9 @@ def _generate_measurement_fixture(gate: str):
         circuit = QuantumCircuit(1, 1)
         getattr(circuit, gate)(0, 0)
         return _map_gate_name(gate), circuit
+
     return test_fixture
+
 
 # Generate measurement fixtures
 for gate in _measurements.keys():

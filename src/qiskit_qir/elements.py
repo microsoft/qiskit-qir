@@ -23,12 +23,7 @@ class _Register(_QuantumCircuitElement):
 
 
 class _Instruction(_QuantumCircuitElement):
-    def __init__(
-        self,
-        instruction: Instruction,
-        qargs: List[Bit],
-        cargs: List[Bit]
-    ):
+    def __init__(self, instruction: Instruction, qargs: List[Bit], cargs: List[Bit]):
         self._instruction = instruction
         self._qargs = qargs
         self._cargs = cargs

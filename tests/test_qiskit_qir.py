@@ -13,13 +13,19 @@ from qiskit_qir.translate import to_qir, to_qir_bitcode
 
 from test_circuits import core_tests, noop_tests
 from test_circuits.control_flow_circuits import cf_fixtures
-from test_circuits.basic_gates import single_op_tests, adj_op_tests, rotation_tests, double_op_tests, triple_op_tests, measurement_tests
+from test_circuits.basic_gates import (
+    single_op_tests,
+    adj_op_tests,
+    rotation_tests,
+    double_op_tests,
+    triple_op_tests,
+    measurement_tests,
+)
 
 import test_utils
 
 _log = logging.getLogger(__name__)
-_test_output_dir = Path(
-    f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
+_test_output_dir = Path(f"test_output.{datetime.now().strftime('%Y%m%d_%H%M')}")
 if _log.isEnabledFor(logging.DEBUG) and not _test_output_dir.exists():
     _test_output_dir.mkdir()
 
@@ -41,9 +47,9 @@ def test_to_qir_string(circuit_name, request):
     generated_ir = to_qir(circuit)
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
-        qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
+        qasm_path = _test_output_dir.joinpath(circuit_name + ".qasm")
         circuit.qasm(filename=str(qasm_path))
-        qir_path = _test_output_dir.joinpath(circuit_name + '.ll')
+        qir_path = _test_output_dir.joinpath(circuit_name + ".ll")
         qir_path.write_text(generated_ir)
 
 
@@ -64,6 +70,7 @@ def test_noop_gates(circuit_name, request):
     _log.debug(generated_ir)
     assert generated_ir is not None
 
+
 @pytest.mark.xfail(Reason="OpenQASM 3.0-style control flow is not supported yet")
 @pytest.mark.parametrize("circuit_name", cf_fixtures)
 def test_control_flow(circuit_name, request):
@@ -71,9 +78,9 @@ def test_control_flow(circuit_name, request):
     generated_ir = to_qir(circuit)
     assert generated_ir is not None
     if _log.isEnabledFor(logging.DEBUG):
-        qasm_path = _test_output_dir.joinpath(circuit_name + '.qasm')
+        qasm_path = _test_output_dir.joinpath(circuit_name + ".qasm")
         circuit.qasm(filename=str(qasm_path))
-        qir_path = _test_output_dir.joinpath(circuit_name + '.ll')
+        qir_path = _test_output_dir.joinpath(circuit_name + ".ll")
         qir_path.write_text(generated_ir)
 
 

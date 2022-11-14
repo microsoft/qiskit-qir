@@ -6,7 +6,10 @@ from qiskit_qir.elements import QiskitModule
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 
-def to_qir(circuit: QuantumCircuit, profile: str = "AdaptiveExecution", **kwargs) -> str:
+
+def to_qir(
+    circuit: QuantumCircuit, profile: str = "AdaptiveExecution", **kwargs
+) -> str:
     r"""Converts the Qiskit QuantumCircuit to QIR as a string
 
     :param circuit:
@@ -33,7 +36,9 @@ def to_qir(circuit: QuantumCircuit, profile: str = "AdaptiveExecution", **kwargs
     return visitor.ir()
 
 
-def to_qir_bitcode(circuit: QuantumCircuit, profile: str = "AdaptiveExecution", **kwargs) -> bytes:
+def to_qir_bitcode(
+    circuit: QuantumCircuit, profile: str = "AdaptiveExecution", **kwargs
+) -> bytes:
     r"""Converts the Qiskit QuantumCircuit to QIR bitcode as bytes
 
     :param circuit:
