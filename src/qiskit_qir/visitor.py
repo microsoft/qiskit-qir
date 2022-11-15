@@ -133,19 +133,19 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         void_type = Type.void(context)
         qtype = qubit_type(context)
 
-        self._barrier = Function(
+        self._barrier = lambda: _get_or_create_function(
             FunctionType(void_type, []),
             Linkage.EXTERNAL,
             "__quantum__qis__barrier__body",
             self._module,
         )
-        self._ccx = Function(
+        self._ccx = lambda: _get_or_create_function(
             FunctionType(void_type, [qtype, qtype, qtype]),
             Linkage.EXTERNAL,
             "__quantum__qis__ccnot__body",
             self._module,
         )
-        self._swap = Function(
+        self._swap = lambda: _get_or_create_function(
             FunctionType(void_type, [qtype, qtype]),
             Linkage.EXTERNAL,
             "__quantum__qis__swap__body",
@@ -164,7 +164,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
         # produces output records of exactly "RESULT ARRAY_START"
 
-        array_start_record_output = Function(
+        array_start_record_output = _get_or_create_function(
             FunctionType(void_type, []),
             Linkage.EXTERNAL,
             "__quantum__rt__array_start_record_output",
@@ -172,7 +172,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         )
 
         # produces output records of exactly "RESULT ARRAY_END"
-        array_end_record_output = Function(
+        array_end_record_output = _get_or_create_function(
             FunctionType(void_type, []),
             Linkage.EXTERNAL,
             "__quantum__rt__array_end_record_output",
@@ -180,7 +180,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         )
 
         # produces output records of exactly "RESULT 0" or "RESULT 1"
-        result_record_output = Function(
+        result_record_output = _get_or_create_function(
             FunctionType(void_type, [rtype]),
             Linkage.EXTERNAL,
             "__quantum__rt__result_record_output",
@@ -338,13 +338,13 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                         )
             if "barrier" == instruction.name:
                 if self._emit_barrier_calls:
-                    self._builder.call(self._barrier, [])
+                    self._builder.call(self._barrier(), [])
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:
-                self._builder.call(self._swap, qubits)
+                self._builder.call(self._swap(), qubits)
             elif "ccx" == instruction.name:
-                self._builder.call(self._ccx, qubits)
+                self._builder.call(self._ccx(), qubits)
             elif "cx" == instruction.name:
                 self._qis.cx(*qubits)
             elif "cz" == instruction.name:
@@ -404,3 +404,17 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             raise UnsupportedOperation(
                 f"The supplied profile is not supported: {profile}."
             )
+
+
+def _get_or_create_function(
+    ty: FunctionType, linkage: Linkage, name: str, module: Module
+) -> Function:
+    existing = next(
+        iter(filter(lambda f: f.name == name, module.functions) or []), None
+    )
+    return existing or Function(
+        ty,
+        linkage,
+        name,
+        module,
+    )

@@ -76,7 +76,9 @@ def test_branching_on_bit_emits_correct_ir():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function_old(generated_qir, "branching_on_bit_emits_correct_ir")
+    func = test_utils.find_function_old(
+        generated_qir, "branching_on_bit_emits_correct_ir"
+    )
     assert func[0] == test_utils.single_op_call_string("x", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("0", 0)
@@ -117,9 +119,11 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
 
     ir = to_qir(circuit)
     generated_qir = ir.splitlines()
-    
+
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function_old(generated_qir, "branching_on_register_with_one_bit_emits_correct_ir")
+    func = test_utils.find_function_old(
+        generated_qir, "branching_on_register_with_one_bit_emits_correct_ir"
+    )
     assert func[0] == test_utils.single_op_call_string("x", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("0", 0)
@@ -193,7 +197,7 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     assert len(func) == 13
 
 
-def test_using_both_static_allocs_true_is_mapped_correctly():
+def test_using_static_allocation_is_mapped_correctly():
     circuit = QuantumCircuit(1, 1)
     circuit.h(0)
     circuit.measure(0, 0)

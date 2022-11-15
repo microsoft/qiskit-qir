@@ -6,57 +6,47 @@
 from typing import List
 from pyqir import is_entry_point, Module, Function
 
-def _qubit_string(qubit: int, static_alloc=True) -> str:
-    if static_alloc == False:
-        return f"%Qubit* %qubit{qubit}"
 
+def _qubit_string(qubit: int) -> str:
     if qubit == 0:
         return "%Qubit* null"
     else:
         return f"%Qubit* inttoptr (i64 {qubit} to %Qubit*)"
 
 
-def _result_string(res: int, static_alloc=True) -> str:
-    if static_alloc == False:
-        return f"%Result* %result{res}"
-
+def _result_string(res: int) -> str:
     if res == 0:
         return "%Result* null"
     else:
         return f"%Result* inttoptr (i64 {res} to %Result*)"
 
 
-def single_op_call_string(name: str, qb: int, static_alloc=True) -> str:
-    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_alloc)})"
+def single_op_call_string(name: str, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)})"
 
 
-def adj_op_call_string(name: str, qb: int, static_alloc=True) -> str:
-    return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb, static_alloc)})"
+def adj_op_call_string(name: str, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__adj({_qubit_string(qb)})"
 
 
-def double_op_call_string(name: str, qb1: int, qb2: int, static_alloc=True) -> str:
-    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb1, static_alloc)}, {_qubit_string(qb2, static_alloc)})"
+def double_op_call_string(name: str, qb1: int, qb2: int) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb1)}, {_qubit_string(qb2)})"
 
 
-def rotation_call_string(name: str, theta: float, qb: int, static_alloc=True) -> str:
-    return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb, static_alloc)})"
+def rotation_call_string(name: str, theta: float, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__body(double {theta:#e}, {_qubit_string(qb)})"
 
 
-def measure_call_string(
-    name: str, res: str, qb: int, static_qubit_alloc=True, static_result_alloc=True
-) -> str:
-    if static_result_alloc:
-        return f"call void @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)}, {_result_string(res, static_result_alloc)})"
-    else:
-        return f"%result{res} = call %Result* @__quantum__qis__{name}__body({_qubit_string(qb, static_qubit_alloc)})"
+def measure_call_string(name: str, res: str, qb: int) -> str:
+    return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)}, {_result_string(res)})"
 
 
 def equal(var: str, res: str):
     return f"%{var} = call i1 @__quantum__qis__read_result__body({_result_string(res)})"
 
 
-def generic_op_call_string(name: str, qbs: List[int], static_alloc=True) -> str:
-    args = ", ".join(_qubit_string(qb, static_alloc) for qb in qbs)
+def generic_op_call_string(name: str, qbs: List[int]) -> str:
+    args = ", ".join(_qubit_string(qb) for qb in qbs)
     return f"call void @__quantum__qis__{name}__body({args})"
 
 
@@ -72,11 +62,11 @@ def array_end_record_output_string() -> str:
     return f"call void @__quantum__rt__array_end_record_output()"
 
 
-def result_record_output_string(res: str, static_alloc=True) -> str:
-    return f"call void @__quantum__rt__result_record_output({_result_string(res, static_alloc)})"
+def result_record_output_string(res: str) -> str:
+    return f"call void @__quantum__rt__result_record_output({_result_string(res)})"
 
 
-def find_function_old(qir: List[str], name = "main") -> List[str]:
+def find_function_old(qir: List[str], name="main") -> List[str]:
     result = []
     state = 0
     for line in qir:
@@ -90,6 +80,7 @@ def find_function_old(qir: List[str], name = "main") -> List[str]:
         elif state == 2:
             result.append(l)
     assert "No main function found"
+
 
 def find_function(qir: List[str]) -> List[str]:
     x = "\n".join(qir)
@@ -108,6 +99,7 @@ def get_entry_point(mod: Module) -> Function:
     func = next(filter(is_entry_point, mod.functions))
     assert func is not None, "No main function found"
     return func
+
 
 def check_attributes(
     qir: List[str], expected_qubits: int = -1, expected_results: int = -1
