@@ -6,11 +6,11 @@ from qiskit_qir.elements import QiskitModule
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from typing import List, Union
-from pyqir import Context, Module, run_basic_passes
+from pyqir import Context, Module, verify_module
 
 
 def to_qir(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit()]],
+    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
     profile: str = "AdaptiveExecution",
     **kwargs
 ) -> str:
@@ -18,7 +18,7 @@ def to_qir(
 
     :param circuits:
         Qiskit circuit(s) to be converted to QIR
-    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit()]]``
+    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit]]``
     :param profile:
         The target profile for capability verification
     :type profile: ``str``
@@ -29,12 +29,12 @@ def to_qir(
         * *record_output* (``bool``) --
           Whether to record output calls for registers, default `True`
     """
-    module = _build_module(circuits, profile=profile, kwargs=kwargs)
+    module = _build_module(circuits, profile, **kwargs)
     return str(module)
 
 
 def to_qir_bitcode(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit()]],
+    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
     profile: str = "AdaptiveExecution",
     **kwargs
 ) -> bytes:
@@ -42,7 +42,7 @@ def to_qir_bitcode(
 
     :param circuits:
         Qiskit circuit to be converted to QIR
-    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit()]]``
+    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit]]``
     :param profile:
         The target profile for capability verification
     :type profile: ``str``
@@ -54,31 +54,34 @@ def to_qir_bitcode(
           Whether to record output calls for registers, default `True`
     """
 
-    module = _build_module(circuits, profile=profile, kwargs=kwargs)
-    return module.bitcode()
+    module = _build_module(circuits, profile, **kwargs)
+    return module.bitcode
 
 
 def _build_module(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit()]],
+    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
     profile: str = "AdaptiveExecution",
     **kwargs
 ) -> Module:
-    circuits = circuits if isinstance(circuits, List[QuantumCircuit]) else [circuits]
+    name = "batch"
+    if isinstance(circuits, QuantumCircuit):
+        name = circuits.name
+        circuits = [circuits]
+
     if len(circuits) == 0:
         raise "No QuantumCircuits provided"
-    name = "batch"
-    if len(circuits) == 1:
-        name = circuits[0].name
 
     llvm_module = Module(Context(), name)
-    modules = circuits.map(
-        lambda circuit: QiskitModule.from_quantum_circuit(
-            circuit=circuit, module=llvm_module
+    modules = list(
+        map(
+            lambda circuit: QiskitModule.from_quantum_circuit(
+                circuit=circuit, module=llvm_module
+            ),
+            circuits,
         )
     )
     for module in modules:
-        visitor = BasicQisVisitor(profile, kwargs=kwargs)
+        visitor = BasicQisVisitor(profile, **kwargs)
         module.accept(visitor)
-    run_basic_passes(llvm_module)
-    llvm_module.verify()
+    verify_module(llvm_module)
     return llvm_module

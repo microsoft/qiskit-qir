@@ -15,13 +15,6 @@ from qiskit_qir.capability import (
 )
 from qiskit_qir.visitor import BasicQisVisitor
 
-static_generator_variations = [
-    [False, False],
-    [False, True],
-    [True, False],
-    [True, True],
-]
-
 # test circuits
 
 
@@ -119,29 +112,25 @@ def conditional_branch_on_bit():
 
 
 class ConfigurableQisVisitor(BasicQisVisitor):
-    def __init__(self, matrix: List[bool], profile: str = "AdaptiveExecution"):
-        BasicQisVisitor.__init__(self, profile)
-        self._matrix = matrix
+    def __init__(self, profile: str = "AdaptiveExecution", **kwargs):
+        BasicQisVisitor.__init__(self, profile, **kwargs)
 
     def visit_qiskit_module(self, module):
         BasicQisVisitor.visit_qiskit_module(self, module)
-        self._module.use_static_qubit_alloc(self._matrix[0])
-        self._module.use_static_result_alloc(self._matrix[1])
 
 
-# Utility using new visitor and codegen matrix
-def matrix_to_qir(circuit, matrix: List[bool], profile: str = "AdaptiveExecution"):
+# Utility using new visitor
+def matrix_to_qir(circuit, profile: str = "AdaptiveExecution"):
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = ConfigurableQisVisitor(matrix, profile)
+    visitor = ConfigurableQisVisitor(profile)
     module.accept(visitor)
     return visitor.ir()
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_fails_without_required_capability(matrix):
+def test_branching_on_measurement_fails_without_required_capability():
     circuit = teleport()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, "BasicExecution")
+        _ = matrix_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -157,11 +146,10 @@ def test_branching_on_measurement_fails_without_required_capability(matrix):
     assert exception_raised.instruction_string == "if(cr == 2) x qq[2]"
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_fails_without_required_capability(matrix):
+def test_branching_on_measurement_fails_without_required_capability():
     circuit = use_conditional_branch_on_single_register_true_value()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, "BasicExecution")
+        _ = matrix_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -178,11 +166,10 @@ def test_branching_on_measurement_fails_without_required_capability(matrix):
     assert exception_raised.instruction_string == "if(creg[2] == True) x qreg[1]"
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_fails_without_required_capability(matrix):
+def test_branching_on_measurement_fails_without_required_capability():
     circuit = use_conditional_branch_on_single_register_false_value()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, "BasicExecution")
+        _ = matrix_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -199,23 +186,20 @@ def test_branching_on_measurement_fails_without_required_capability(matrix):
     assert exception_raised.instruction_string == "if(creg[2] == False) x qreg[1]"
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_register_passses_with_required_capability(matrix):
+def test_branching_on_measurement_register_passses_with_required_capability():
     circuit = teleport()
-    _ = matrix_to_qir(circuit, matrix)
+    _ = matrix_to_qir(circuit)
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_branching_on_measurement_bit_passses_with_required_capability(matrix):
+def test_branching_on_measurement_bit_passses_with_required_capability():
     circuit = conditional_branch_on_bit()
-    _ = matrix_to_qir(circuit, matrix)
+    _ = matrix_to_qir(circuit)
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_reuse_after_measurement_fails_without_required_capability(matrix):
+def test_reuse_after_measurement_fails_without_required_capability():
     circuit = use_after_measure()
     with pytest.raises(QubitUseAfterMeasurementError) as exc_info:
-        _ = matrix_to_qir(circuit, matrix, "BasicExecution")
+        _ = matrix_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -229,23 +213,16 @@ def test_reuse_after_measurement_fails_without_required_capability(matrix):
     assert exception_raised.instruction_string == "h qq[1]"
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_reuse_after_measurement_passes_with_required_capability(matrix):
+def test_reuse_after_measurement_passes_with_required_capability():
     circuit = use_after_measure()
-    _ = matrix_to_qir(circuit, matrix)
+    _ = matrix_to_qir(circuit)
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_using_an_unread_qubit_after_measuring_passes_without_required_capability(
-    matrix,
-):
+def test_using_an_unread_qubit_after_measuring_passes_without_required_capability():
     circuit = use_another_after_measure()
-    _ = matrix_to_qir(circuit, matrix, "BasicExecution")
+    _ = matrix_to_qir(circuit, "BasicExecution")
 
 
-@pytest.mark.parametrize("matrix", static_generator_variations)
-def test_use_another_after_measure_and_condition_passes_with_required_capability(
-    matrix,
-):
+def test_use_another_after_measure_and_condition_passes_with_required_capability():
     circuit = use_another_after_measure_and_condition()
-    _ = matrix_to_qir(circuit, matrix)
+    _ = matrix_to_qir(circuit)

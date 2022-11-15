@@ -4,15 +4,7 @@
 ##
 
 from typing import List
-
-
-def _find_line(qir: List[str], prefix: str, err: str) -> str:
-    for line in qir:
-        l = line.strip()
-        if l.startswith(prefix):
-            return l
-    assert err
-
+from pyqir import is_entry_point, Module, Function
 
 def _qubit_string(qubit: int, static_alloc=True) -> str:
     if static_alloc == False:
@@ -32,14 +24,6 @@ def _result_string(res: int, static_alloc=True) -> str:
         return "%Result* null"
     else:
         return f"%Result* inttoptr (i64 {res} to %Result*)"
-
-
-def allocate_qubit(qb: int) -> str:
-    return f"%qubit{qb} = call %Qubit* @__quantum__rt__qubit_allocate()"
-
-
-def release_qubit(qb: int) -> str:
-    return f"call void @__quantum__rt__qubit_release({_qubit_string(qb, static_alloc=False)})"
 
 
 def single_op_call_string(name: str, qb: int, static_alloc=True) -> str:
@@ -92,12 +76,12 @@ def result_record_output_string(res: str, static_alloc=True) -> str:
     return f"call void @__quantum__rt__result_record_output({_result_string(res, static_alloc)})"
 
 
-def find_function(qir: List[str]) -> List[str]:
+def find_function_old(qir: List[str], name = "main") -> List[str]:
     result = []
     state = 0
     for line in qir:
         l = line.strip()
-        if state == 0 and l == "define void @main() #0 {":
+        if state == 0 and l == f"define void @{name}() #0 {{":
             state = 1
         elif state == 1 and l == "entry:":
             state = 2
@@ -107,24 +91,39 @@ def find_function(qir: List[str]) -> List[str]:
             result.append(l)
     assert "No main function found"
 
+def find_function(qir: List[str]) -> List[str]:
+    x = "\n".join(qir)
+    mod = Module.from_ir(x)
+    func = next(filter(is_entry_point, mod.functions))
+    assert func is not None, "No main function found"
+    body = []
+    for block in func.basic_blocks:
+        for inst in block.instructions:
+            body.append(str(inst).strip())
+
+    return body
+
+
+def get_entry_point(mod: Module) -> Function:
+    func = next(filter(is_entry_point, mod.functions))
+    assert func is not None, "No main function found"
+    return func
 
 def check_attributes(
     qir: List[str], expected_qubits: int = -1, expected_results: int = -1
 ) -> None:
-    attr_string = 'attributes #0 = { "EntryPoint"'
-    attr_line = _find_line(qir, attr_string, "Missing entry point attribute")
-    chunks = attr_line.split(" ")
+    x = "\n".join(qir)
+    mod = Module.from_ir(x)
+    func = next(filter(is_entry_point, mod.functions))
+
     actual_qubits = -1
     actual_results = -1
-    for chunk in chunks:
-        potential_pair = chunk.split("=")
-        if len(potential_pair) == 2:
-            (name, value) = potential_pair
-            if str(name) == '"requiredQubits"':
-                actual_qubits = int(value.strip('"'))
-            if str(name) == '"requiredResults"':
-                actual_results = int(value.strip('"'))
-
+    actual_qubits_attr = func.attribute("requiredQubits")
+    if actual_qubits_attr is not None:
+        actual_qubits = int(actual_qubits_attr.value)
+    actual_results_attr = func.attribute("requiredResults")
+    if actual_results_attr is not None:
+        actual_results = int(actual_results_attr.value)
     assert (
         expected_qubits == actual_qubits
     ), f"Incorrect qubit count: {expected_qubits} expected, {actual_qubits} actual"

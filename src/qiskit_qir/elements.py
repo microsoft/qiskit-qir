@@ -2,7 +2,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from typing import List, Union
+from typing import List, Optional, Union
+from pyqir import Module, Context
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit.bit import Bit
 from qiskit.circuit.quantumcircuit import QuantumCircuit, Instruction
@@ -59,7 +60,7 @@ class QiskitModule:
 
     @classmethod
     def from_quantum_circuit(
-        cls, circuit: QuantumCircuit, module: Module
+        cls, circuit: QuantumCircuit, module: Optional[Module] = None
     ) -> "QiskitModule":
         """Create a new QiskitModule from a qiskit.QuantumCircuit object."""
         elements = []
@@ -73,6 +74,8 @@ class QiskitModule:
         for instruction, qargs, cargs in circuit._data:
             elements.append(_Instruction(instruction, qargs, cargs))
 
+        if module is None:
+            module = Module(Context(), circuit.name)
         return cls(
             name=circuit.name,
             module=module,
@@ -87,4 +90,4 @@ class QiskitModule:
         for element in self._elements:
             element.accept(visitor)
         visitor.record_output(self)
-        visitor.finalize(self)
+        visitor.finalize()
