@@ -127,7 +127,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             self._module, module.name, module.num_qubits, module.num_clbits
         )
         self._builder = Builder(context)
-        self._builder.insert_from_end(BasicBlock(context, "entry", entry))
+        self._builder.insert_at_end(BasicBlock(context, "entry", entry))
         self._qis = BasicQisBuilder(self._builder)
 
         void_type = Type.void(context)
