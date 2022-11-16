@@ -31,7 +31,9 @@ def get_parameterized_circuit(nub_qubits: int, num_params: int) -> List[QuantumC
     circuit.h(0)
     circuit.measure(0, 0)
 
-    circuits = [circuit.bind_parameters({theta: theta_val}) for theta_val in theta_range]
+    circuits = [
+        circuit.bind_parameters({theta: theta_val}) for theta_val in theta_range
+    ]
 
     return circuits
 
