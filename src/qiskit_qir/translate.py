@@ -72,16 +72,8 @@ def _build_module(
         raise "No QuantumCircuits provided"
 
     llvm_module = Module(Context(), name)
-    modules = list(
-        map(
-            lambda circuit: QiskitModule.from_quantum_circuit(
-                circuit=circuit, module=llvm_module
-            ),
-            circuits,
-        )
-    )
-    for module in modules:
-        visitor = BasicQisVisitor(profile, **kwargs)
-        module.accept(visitor)
+    for circuit in circuits:
+        module = QiskitModule.from_quantum_circuit(circuit, llvm_module)
+        module.accept(BasicQisVisitor(profile, **kwargs))
     verify_module(llvm_module)
     return llvm_module
