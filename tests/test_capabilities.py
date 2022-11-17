@@ -111,18 +111,10 @@ def conditional_branch_on_bit():
     return circuit
 
 
-class ConfigurableQisVisitor(BasicQisVisitor):
-    def __init__(self, profile: str = "AdaptiveExecution", **kwargs):
-        BasicQisVisitor.__init__(self, profile, **kwargs)
-
-    def visit_qiskit_module(self, module):
-        BasicQisVisitor.visit_qiskit_module(self, module)
-
-
 # Utility using new visitor
-def matrix_to_qir(circuit, profile: str = "AdaptiveExecution"):
+def circuit_to_qir(circuit, profile: str = "AdaptiveExecution"):
     module = QiskitModule.from_quantum_circuit(circuit=circuit)
-    visitor = ConfigurableQisVisitor(profile)
+    visitor = BasicQisVisitor(profile)
     module.accept(visitor)
     return visitor.ir()
 
@@ -130,7 +122,7 @@ def matrix_to_qir(circuit, profile: str = "AdaptiveExecution"):
 def test_branching_on_measurement_fails_without_required_capability():
     circuit = teleport()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, "BasicExecution")
+        _ = circuit_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -149,7 +141,7 @@ def test_branching_on_measurement_fails_without_required_capability():
 def test_branching_on_measurement_fails_without_required_capability():
     circuit = use_conditional_branch_on_single_register_true_value()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, "BasicExecution")
+        _ = circuit_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -169,7 +161,7 @@ def test_branching_on_measurement_fails_without_required_capability():
 def test_branching_on_measurement_fails_without_required_capability():
     circuit = use_conditional_branch_on_single_register_false_value()
     with pytest.raises(ConditionalBranchingOnResultError) as exc_info:
-        _ = matrix_to_qir(circuit, "BasicExecution")
+        _ = circuit_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -188,18 +180,18 @@ def test_branching_on_measurement_fails_without_required_capability():
 
 def test_branching_on_measurement_register_passses_with_required_capability():
     circuit = teleport()
-    _ = matrix_to_qir(circuit)
+    _ = circuit_to_qir(circuit)
 
 
 def test_branching_on_measurement_bit_passses_with_required_capability():
     circuit = conditional_branch_on_bit()
-    _ = matrix_to_qir(circuit)
+    _ = circuit_to_qir(circuit)
 
 
 def test_reuse_after_measurement_fails_without_required_capability():
     circuit = use_after_measure()
     with pytest.raises(QubitUseAfterMeasurementError) as exc_info:
-        _ = matrix_to_qir(circuit, "BasicExecution")
+        _ = circuit_to_qir(circuit, "BasicExecution")
 
     exception_raised = exc_info.value
     assert (
@@ -215,14 +207,14 @@ def test_reuse_after_measurement_fails_without_required_capability():
 
 def test_reuse_after_measurement_passes_with_required_capability():
     circuit = use_after_measure()
-    _ = matrix_to_qir(circuit)
+    _ = circuit_to_qir(circuit)
 
 
 def test_using_an_unread_qubit_after_measuring_passes_without_required_capability():
     circuit = use_another_after_measure()
-    _ = matrix_to_qir(circuit, "BasicExecution")
+    _ = circuit_to_qir(circuit, "BasicExecution")
 
 
 def test_use_another_after_measure_and_condition_passes_with_required_capability():
     circuit = use_another_after_measure_and_condition()
-    _ = matrix_to_qir(circuit)
+    _ = circuit_to_qir(circuit)

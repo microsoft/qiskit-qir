@@ -12,21 +12,21 @@ import tempfile
 from typing import List, Optional
 
 
-def get_parameterized_circuit(nub_qubits: int, num_params: int) -> List[QuantumCircuit]:
+def get_parameterized_circuit(num_qubits: int, num_params: int) -> List[QuantumCircuit]:
     theta_range = np.linspace(0, 2 * np.pi, num_params)
 
     theta = Parameter("θ")
-    circuit = QuantumCircuit(nub_qubits, 1)
+    circuit = QuantumCircuit(num_qubits, 1)
 
     circuit.h(0)
-    for i in range(nub_qubits - 1):
+    for i in range(num_qubits - 1):
         circuit.cx(i, i + 1)
 
     circuit.barrier()
-    circuit.rz(theta, range(nub_qubits))
+    circuit.rz(theta, range(num_qubits))
     circuit.barrier()
 
-    for i in reversed(range(nub_qubits - 1)):
+    for i in reversed(range(num_qubits - 1)):
         circuit.cx(i, i + 1)
     circuit.h(0)
     circuit.measure(0, 0)
