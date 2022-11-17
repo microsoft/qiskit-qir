@@ -110,9 +110,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._measured_qubits = {}
         self._emit_barrier_calls = kwargs.get("emit_barrier_calls", False)
         self._record_output = kwargs.get("record_output", True)
-        self._barrier = None
-        self._ccx = None
-        self._swap = None
 
     def visit_qiskit_module(self, module):
         _log.debug(
@@ -126,28 +123,6 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._builder = Builder(context)
         self._builder.insert_at_end(BasicBlock(context, "entry", entry))
         self._qis = BasicQisBuilder(self._builder)
-
-        void_type = Type.void(context)
-        qubit_type = pyqir.qubit_type(context)
-
-        self._barrier = lambda: _get_or_create_function(
-            FunctionType(void_type, []),
-            Linkage.EXTERNAL,
-            "__quantum__qis__barrier__body",
-            self._module,
-        )
-        self._ccx = lambda: _get_or_create_function(
-            FunctionType(void_type, [qubit_type, qubit_type, qubit_type]),
-            Linkage.EXTERNAL,
-            "__quantum__qis__ccnot__body",
-            self._module,
-        )
-        self._swap = lambda: _get_or_create_function(
-            FunctionType(void_type, [qubit_type, qubit_type]),
-            Linkage.EXTERNAL,
-            "__quantum__qis__swap__body",
-            self._module,
-        )
 
     def finalize(self):
         self._builder.ret(None)
@@ -335,13 +310,13 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                         )
             if "barrier" == instruction.name:
                 if self._emit_barrier_calls:
-                    self._builder.call(self._barrier(), [])
+                    self._builder.call(self._barrier, [])
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:
-                self._builder.call(self._swap(), qubits)
+                self._builder.call(self._swap, qubits)
             elif "ccx" == instruction.name:
-                self._builder.call(self._ccx(), qubits)
+                self._builder.call(self._ccx, qubits)
             elif "cx" == instruction.name:
                 self._qis.cx(*qubits)
             elif "cz" == instruction.name:
@@ -390,6 +365,38 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
     def bitcode(self) -> bytes:
         return self._module.bitcode()
+
+    @property
+    def _barrier(self) -> Function:
+        void = Type.void(self._module.context)
+        return _get_or_create_function(
+            FunctionType(void, []),
+            Linkage.EXTERNAL,
+            "__quantum__qis__barrier__body",
+            self._module,
+        )
+
+    @property
+    def _ccx(self) -> Function:
+        void = Type.void(self._module.context)
+        qubit = pyqir.qubit_type(self._module.context)
+        return _get_or_create_function(
+            FunctionType(void, [qubit, qubit, qubit]),
+            Linkage.EXTERNAL,
+            "__quantum__qis__ccnot__body",
+            self._module,
+        )
+
+    @property
+    def _swap(self) -> Function:
+        void = Type.void(self._module.context)
+        qubit = pyqir.qubit_type(self._module.context)
+        return _get_or_create_function(
+            FunctionType(void, [qubit, qubit]),
+            Linkage.EXTERNAL,
+            "__quantum__qis__swap__body",
+            self._module,
+        )
 
     def _map_profile_to_capabilities(self, profile: str):
         value = profile.strip().lower()

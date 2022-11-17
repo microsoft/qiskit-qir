@@ -111,8 +111,9 @@ def check_attributes(
     actual_qubits = -1
     actual_results = -1
     from pyqir import required_num_qubits, required_num_results
-    actual_qubits_attr = required_num_qubits(func)
-    actual_results_attr = required_num_results(func)
+
+    actual_qubits = required_num_qubits(func)
+    actual_results = required_num_results(func)
     assert (
         expected_qubits == actual_qubits
     ), f"Incorrect qubit count: {expected_qubits} expected, {actual_qubits} actual"
