@@ -406,9 +406,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 def _get_or_create_function(
     ty: FunctionType, linkage: Linkage, name: str, module: Module
 ) -> Function:
-    existing = next(
-        iter(filter(lambda f: f.name == name, module.functions) or []), None
-    )
+    existing = next(filter(lambda f: f.name == name, module.functions), None)
     return existing or Function(
         ty,
         linkage,
