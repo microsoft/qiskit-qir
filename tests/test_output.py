@@ -76,9 +76,7 @@ def test_branching_on_bit_emits_correct_ir():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function_old(
-        generated_qir, "branching_on_bit_emits_correct_ir"
-    )
+    func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("x", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("0", 0)
@@ -121,9 +119,7 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function_old(
-        generated_qir, "branching_on_register_with_one_bit_emits_correct_ir"
-    )
+    func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("x", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.equal("0", 0)

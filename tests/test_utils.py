@@ -66,33 +66,17 @@ def result_record_output_string(res: str) -> str:
     return f"call void @__quantum__rt__result_record_output({_result_string(res)})"
 
 
-def find_function_old(qir: List[str], name="main") -> List[str]:
-    result = []
-    state = 0
-    for line in qir:
-        l = line.strip()
-        if state == 0 and l == f"define void @{name}() #0 {{":
-            state = 1
-        elif state == 1 and l == "entry:":
-            state = 2
-        elif state == 2 and l == "}":
-            return result
-        elif state == 2:
-            result.append(l)
-    assert "No main function found"
-
-
+# Returns the method body with:
+# - leading spaces trimmed
+# - first label skipped
+# - signature and closing braces removed
 def find_function(qir: List[str]) -> List[str]:
-    x = "\n".join(qir)
-    mod = Module.from_ir(x)
+    joined = "\n".join(qir)
+    mod = Module.from_ir(joined)
     func = next(filter(is_entry_point, mod.functions))
     assert func is not None, "No main function found"
-    body = []
-    for block in func.basic_blocks:
-        for inst in block.instructions:
-            body.append(str(inst).strip())
-
-    return body
+    lines = str(func).splitlines()[2:-1]
+    return list(map(lambda line: line.strip(), lines))
 
 
 def get_entry_point(mod: Module) -> Function:
