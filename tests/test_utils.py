@@ -102,12 +102,18 @@ def get_entry_point(mod: Module) -> Function:
 
 
 def check_attributes(
-    qir: List[str], expected_qubits: int = -1, expected_results: int = -1
+    qir: List[str], expected_qubits: int = 0, expected_results: int = 0
 ) -> None:
     x = "\n".join(qir)
     mod = Module.from_ir(x)
     func = next(filter(is_entry_point, mod.functions))
 
+    check_attributes_on_entrypoint(func, expected_qubits, expected_results)
+
+
+def check_attributes_on_entrypoint(
+    func: Function, expected_qubits: int = 0, expected_results: int = 0
+) -> None:
     actual_qubits = -1
     actual_results = -1
     from pyqir import required_num_qubits, required_num_results
