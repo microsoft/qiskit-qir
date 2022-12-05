@@ -2,13 +2,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from qiskit_qir.translate import to_qir_bitcode
+from qiskit_qir.translate import to_qir_bitcode, to_qir_bitcode_with_entry_points
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.circuit import Parameter
 import numpy as np
 from pyqir import Module, is_entry_point
 from typing import List
 import test_utils
+import pytest
 
 
 def get_parameterized_circuit(num_qubits: int, num_params: int) -> List[QuantumCircuit]:
@@ -49,23 +50,27 @@ def test_binding_generates_corresponding_entry_points() -> None:
 def test_batch_entry_points_use_circuit_names() -> None:
     qc1 = QuantumCircuit(1, name="first")
     qc2 = QuantumCircuit(1, name="second")
-    bitcode = to_qir_bitcode(list([qc1, qc2]))
+    bitcode, entry_points = to_qir_bitcode_with_entry_points(list([qc1, qc2]))
     mod = Module.from_bitcode(bitcode)
     functions = list(filter(is_entry_point, mod.functions))
     assert len(functions) == 2
     for function in functions:
         assert function.name in ["first", "second"]
+    assert entry_points == list([x.name for x in functions])
 
 
 def test_batch_entry_points_make_unique_names_on_duplicates() -> None:
-    qc1 = QuantumCircuit(1, name="first")
-    qc2 = QuantumCircuit(1, name="first")
-    bitcode = to_qir_bitcode(list([qc1, qc2]))
+    name = "first"
+    qc1 = QuantumCircuit(1, name=name)
+    qc2 = QuantumCircuit(1, name=name)
+    bitcode, entry_points = to_qir_bitcode_with_entry_points(list([qc1, qc2]))
     mod = Module.from_bitcode(bitcode)
     functions = list(filter(is_entry_point, mod.functions))
     assert len(functions) == 2
     for function in functions:
-        assert function.name.startswith("first")
+        assert function.name.startswith(name)
+    assert functions[0].name != functions[1].name
+    assert entry_points == list([x.name for x in functions])
 
 
 def test_batch_entry_points_have_appropriate_attributes() -> None:
@@ -83,3 +88,25 @@ def test_batch_entry_points_have_appropriate_attributes() -> None:
     test_utils.check_attributes_on_entrypoint(functions[1], 1)
     test_utils.check_attributes_on_entrypoint(functions[2])
     test_utils.check_attributes_on_entrypoint(functions[3], expected_results=2)
+
+
+def test_passing_list_with_non_quantum_circuits_raises_value_error() -> None:
+    qc = QuantumCircuit(1)
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(list([qc, 2]))
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(list([2, qc]))
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(list([2]))
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(list([qc, 2, qc]))
+
+
+def test_passing_non_quantum_circuits_raises_value_error() -> None:
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(2)
+
+
+def test_passing_empty_list_of_quantum_circuits_raises_value_error() -> None:
+    with pytest.raises(ValueError):
+        _ = to_qir_bitcode(list([]))

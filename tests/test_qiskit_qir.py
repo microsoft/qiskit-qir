@@ -147,8 +147,7 @@ def test_measurement(circuit_name, request):
     func = test_utils.find_function(generated_qir)
 
     assert func[0] == test_utils.measure_call_string(qir_op, 0, 0)
-    assert func[1] == test_utils.array_start_record_output_string()
+    assert func[1] == test_utils.array_record_output_string(1)
     assert func[2] == test_utils.result_record_output_string(0)
-    assert func[3] == test_utils.array_end_record_output_string()
-    assert func[4] == test_utils.return_string()
-    assert len(func) == 5
+    assert func[3] == test_utils.return_string()
+    assert len(func) == 4

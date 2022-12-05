@@ -26,13 +26,12 @@ def test_single_array():
     assert func[3] == test_utils.measure_call_string("mz", 2, 0)
     assert func[4] == test_utils.measure_call_string("mz", 0, 1)
     assert func[5] == test_utils.measure_call_string("mz", 1, 2)
-    assert func[6] == test_utils.array_start_record_output_string()
+    assert func[6] == test_utils.array_record_output_string(3)
     assert func[7] == test_utils.result_record_output_string(2)
     assert func[8] == test_utils.result_record_output_string(1)
     assert func[9] == test_utils.result_record_output_string(0)
-    assert func[10] == test_utils.array_end_record_output_string()
-    assert func[11] == test_utils.return_string()
-    assert len(func) == 12
+    assert func[10] == test_utils.return_string()
+    assert len(func) == 11
 
 
 def test_no_measure_with_no_registers():
@@ -57,11 +56,10 @@ def test_no_measure_with_register():
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.array_start_record_output_string()
+    assert func[1] == test_utils.array_record_output_string(1)
     assert func[2] == test_utils.result_record_output_string(0)
-    assert func[3] == test_utils.array_end_record_output_string()
-    assert func[4] == test_utils.return_string()
-    assert len(func) == 5
+    assert func[3] == test_utils.return_string()
+    assert len(func) == 4
 
 
 def test_branching_on_bit_emits_correct_ir():
@@ -97,12 +95,11 @@ def test_branching_on_bit_emits_correct_ir():
         func[12]
         == f"continue:                                         ; preds = %else, %then"
     )
-    assert func[13] == test_utils.array_start_record_output_string()
+    assert func[13] == test_utils.array_record_output_string(1)
     assert func[14] == test_utils.result_record_output_string(0)
-    assert func[15] == test_utils.array_end_record_output_string()
-    assert func[16] == test_utils.return_string()
+    assert func[15] == test_utils.return_string()
 
-    assert len(func) == 17
+    assert len(func) == 16
 
 
 def test_branching_on_register_with_one_bit_emits_correct_ir():
@@ -140,12 +137,11 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
         func[12]
         == f"continue:                                         ; preds = %else, %then"
     )
-    assert func[13] == test_utils.array_start_record_output_string()
+    assert func[13] == test_utils.array_record_output_string(1)
     assert func[14] == test_utils.result_record_output_string(0)
-    assert func[15] == test_utils.array_end_record_output_string()
-    assert func[16] == test_utils.return_string()
+    assert func[15] == test_utils.return_string()
 
-    assert len(func) == 17
+    assert len(func) == 16
 
 
 def test_no_measure_without_registers():
@@ -180,17 +176,15 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
     assert func[2] == test_utils.measure_call_string("mz", 2, 0)
-    assert func[3] == test_utils.array_start_record_output_string()
+    assert func[3] == test_utils.array_record_output_string(2)
     assert func[4] == test_utils.result_record_output_string(1)
     assert func[5] == test_utils.result_record_output_string(0)
-    assert func[6] == test_utils.array_end_record_output_string()
-    assert func[7] == test_utils.array_start_record_output_string()
-    assert func[8] == test_utils.result_record_output_string(4)
-    assert func[9] == test_utils.result_record_output_string(3)
-    assert func[10] == test_utils.result_record_output_string(2)
-    assert func[11] == test_utils.array_end_record_output_string()
-    assert func[12] == test_utils.return_string()
-    assert len(func) == 13
+    assert func[6] == test_utils.array_record_output_string(3)
+    assert func[7] == test_utils.result_record_output_string(4)
+    assert func[8] == test_utils.result_record_output_string(3)
+    assert func[9] == test_utils.result_record_output_string(2)
+    assert func[10] == test_utils.return_string()
+    assert len(func) == 11
 
 
 def test_using_static_allocation_is_mapped_correctly():
@@ -205,11 +199,10 @@ def test_using_static_allocation_is_mapped_correctly():
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.array_start_record_output_string()
+    assert func[2] == test_utils.array_record_output_string(1)
     assert func[3] == test_utils.result_record_output_string(0)
-    assert func[4] == test_utils.array_end_record_output_string()
-    assert func[5] == test_utils.return_string()
-    assert len(func) == 6
+    assert func[4] == test_utils.return_string()
+    assert len(func) == 5
 
 
 def test_record_output_when_true_mapped_correctly():
@@ -224,11 +217,10 @@ def test_record_output_when_true_mapped_correctly():
     func = test_utils.find_function(generated_qir)
     assert func[0] == test_utils.single_op_call_string("h", 0)
     assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.array_start_record_output_string()
+    assert func[2] == test_utils.array_record_output_string(1)
     assert func[3] == test_utils.result_record_output_string(0)
-    assert func[4] == test_utils.array_end_record_output_string()
-    assert func[5] == test_utils.return_string()
-    assert len(func) == 6
+    assert func[4] == test_utils.return_string()
+    assert len(func) == 5
 
 
 def test_record_output_when_false_mapped_correctly():

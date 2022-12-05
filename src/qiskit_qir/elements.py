@@ -7,17 +7,22 @@ from pyqir import Module, Context
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit.bit import Bit
 from qiskit.circuit.quantumcircuit import QuantumCircuit, Instruction
+from abc import ABCMeta, abstractmethod
 
 
-class _QuantumCircuitElement:
+class _QuantumCircuitElement(metaclass=ABCMeta):
     @classmethod
     def from_element_list(cls, elements):
         return [cls(elem) for elem in elements]
 
+    @abstractmethod
+    def accept(self, visitor):
+        pass
+
 
 class _Register(_QuantumCircuitElement):
     def __init__(self, register: Union[QuantumRegister, ClassicalRegister]):
-        self._register = register
+        self._register: Union[QuantumRegister, ClassicalRegister] = register
 
     def accept(self, visitor):
         visitor.visit_register(self._register)
@@ -25,7 +30,7 @@ class _Register(_QuantumCircuitElement):
 
 class _Instruction(_QuantumCircuitElement):
     def __init__(self, instruction: Instruction, qargs: List[Bit], cargs: List[Bit]):
-        self._instruction = instruction
+        self._instruction: Instruction = instruction
         self._qargs = qargs
         self._cargs = cargs
 
@@ -34,8 +39,17 @@ class _Instruction(_QuantumCircuitElement):
 
 
 class QiskitModule:
-    def __init__(self, name, module, num_qubits, num_clbits, reg_sizes, elements):
+    def __init__(
+        self,
+        name: str,
+        module: Module,
+        num_qubits: int,
+        num_clbits: int,
+        reg_sizes: List[int],
+        elements: List[_QuantumCircuitElement],
+    ):
         self._name = name
+        self._entry_point: str = ""
         self._module = module
         self._elements = elements
         self._num_qubits = num_qubits
@@ -43,27 +57,31 @@ class QiskitModule:
         self.reg_sizes = reg_sizes
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def module(self):
+    def module(self) -> Module:
         return self._module
 
     @property
-    def num_qubits(self):
+    def num_qubits(self) -> int:
         return self._num_qubits
 
     @property
-    def num_clbits(self):
+    def num_clbits(self) -> int:
         return self._num_clbits
+
+    @property
+    def entry_point(self) -> str:
+        return self._entry_point
 
     @classmethod
     def from_quantum_circuit(
         cls, circuit: QuantumCircuit, module: Optional[Module] = None
     ) -> "QiskitModule":
         """Create a new QiskitModule from a qiskit.QuantumCircuit object."""
-        elements = []
+        elements: List[_QuantumCircuitElement] = []
         reg_sizes = [len(creg) for creg in circuit.cregs]
 
         # Registers

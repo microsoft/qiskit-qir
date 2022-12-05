@@ -54,16 +54,14 @@ def return_string() -> str:
     return "ret void"
 
 
-def array_start_record_output_string() -> str:
-    return f"call void @__quantum__rt__array_start_record_output()"
-
-
-def array_end_record_output_string() -> str:
-    return f"call void @__quantum__rt__array_end_record_output()"
+def array_record_output_string(num_elements: int) -> str:
+    return (
+        f"call void @__quantum__rt__array_record_output(i64 {num_elements}, i8* null)"
+    )
 
 
 def result_record_output_string(res: str) -> str:
-    return f"call void @__quantum__rt__result_record_output({_result_string(res)})"
+    return f"call void @__quantum__rt__result_record_output({_result_string(res)}, i8* null)"
 
 
 # Returns the method body with:
