@@ -327,6 +327,6 @@ def test_ccx():
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.generic_op_call_string("ccnot", [2, 0, 1])
+    assert func[0] == test_utils.generic_op_call_string("ccx", [2, 0, 1])
     assert func[1] == test_utils.return_string()
     assert len(func) == 2

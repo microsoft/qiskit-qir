@@ -6,7 +6,7 @@ from qiskit_qir.translate import to_qir_bitcode, to_qir_bitcode_with_entry_point
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.circuit import Parameter
 import numpy as np
-from pyqir import Module, is_entry_point
+from pyqir import Context, Module, is_entry_point
 from typing import List
 import test_utils
 import pytest
@@ -42,7 +42,7 @@ def test_binding_generates_corresponding_entry_points() -> None:
     for i in range(1, 4):
         circuits = get_parameterized_circuit(2, i)
         bitcode = to_qir_bitcode(circuits)
-        mod = Module.from_bitcode(bitcode)
+        mod = Module.from_bitcode(Context(), bitcode)
         funcs = list(filter(is_entry_point, mod.functions))
         assert len(funcs) == i
 
@@ -51,7 +51,7 @@ def test_batch_entry_points_use_circuit_names() -> None:
     qc1 = QuantumCircuit(1, name="first")
     qc2 = QuantumCircuit(1, name="second")
     bitcode, entry_points = to_qir_bitcode_with_entry_points(list([qc1, qc2]))
-    mod = Module.from_bitcode(bitcode)
+    mod = Module.from_bitcode(Context(), bitcode)
     functions = list(filter(is_entry_point, mod.functions))
     assert len(functions) == 2
     for function in functions:
@@ -64,7 +64,7 @@ def test_batch_entry_points_make_unique_names_on_duplicates() -> None:
     qc1 = QuantumCircuit(1, name=name)
     qc2 = QuantumCircuit(1, name=name)
     bitcode, entry_points = to_qir_bitcode_with_entry_points(list([qc1, qc2]))
-    mod = Module.from_bitcode(bitcode)
+    mod = Module.from_bitcode(Context(), bitcode)
     functions = list(filter(is_entry_point, mod.functions))
     assert len(functions) == 2
     for function in functions:
@@ -81,7 +81,7 @@ def test_batch_entry_points_have_appropriate_attributes() -> None:
     cr = ClassicalRegister(2, "creg")
     qc4.add_register(cr)
     bitcode = to_qir_bitcode(list([qc1, qc2, qc3, qc4]))
-    mod = Module.from_bitcode(bitcode)
+    mod = Module.from_bitcode(Context(), bitcode)
     functions = list(filter(is_entry_point, mod.functions))
     assert len(functions) == 4
     test_utils.check_attributes_on_entrypoint(functions[0], 1, 2)

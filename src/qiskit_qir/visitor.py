@@ -143,9 +143,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             Constant,
             IntType,
             PointerType,
-            SimpleModule,
             const,
-            const_getelementptr,
         )
 
         i8p = PointerType(IntType(self._module.context, 8))
@@ -315,9 +313,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:
-                self._qis.swap(*qubits)
+                qis.swap(self._builder, *qubits)
             elif "ccx" == instruction.name:
-                self._qis.ccx(*qubits)
+                qis.ccx(self._builder, *qubits)
             elif "cx" == instruction.name:
                 self._qis.cx(*qubits)
             elif "cz" == instruction.name:

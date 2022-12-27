@@ -4,7 +4,7 @@
 ##
 
 from typing import List
-from pyqir import is_entry_point, Module, Function
+from pyqir import is_entry_point, Context, Module, Function
 
 
 def _qubit_string(qubit: int) -> str:
@@ -70,7 +70,7 @@ def result_record_output_string(res: str) -> str:
 # - signature and closing braces removed
 def find_function(qir: List[str]) -> List[str]:
     joined = "\n".join(qir)
-    mod = Module.from_ir(joined)
+    mod = Module.from_ir(Context(), joined)
     func = next(filter(is_entry_point, mod.functions))
     assert func is not None, "No main function found"
     lines = str(func).splitlines()[2:-1]
@@ -87,7 +87,7 @@ def check_attributes(
     qir: List[str], expected_qubits: int = 0, expected_results: int = 0
 ) -> None:
     x = "\n".join(qir)
-    mod = Module.from_ir(x)
+    mod = Module.from_ir(Context(), x)
     func = next(filter(is_entry_point, mod.functions))
 
     check_attributes_on_entrypoint(func, expected_qubits, expected_results)

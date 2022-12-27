@@ -5,7 +5,7 @@
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from typing import List, Tuple, Union
-from pyqir import Context, Module, verify_module
+from pyqir import Context, Module
 from qiskit_qir.elements import QiskitModule
 
 
@@ -28,6 +28,8 @@ def to_qir(
     :Keyword Arguments:
         * *record_output* (``bool``) --
           Whether to record output calls for registers, default `True`
+        * *emit_barrier_calls* (``bool``) --
+          Whether to emit barrier calls in the QIR, default `False`
     """
     _, module = _build_module(circuits, profile, **kwargs)
     return str(module)
@@ -52,6 +54,8 @@ def to_qir_bitcode(
     :Keyword Arguments:
         * *record_output* (``bool``) --
           Whether to record output calls for registers, default `True`
+        * *emit_barrier_calls* (``bool``) --
+          Whether to emit barrier calls in the QIR, default `False`
     """
 
     _, module = _build_module(circuits, profile, **kwargs)
@@ -77,6 +81,8 @@ def to_qir_bitcode_with_entry_points(
     :Keyword Arguments:
         * *record_output* (``bool``) --
           Whether to record output calls for registers, default `True`
+        * *emit_barrier_calls* (``bool``) --
+          Whether to emit barrier calls in the QIR, default `False`
     """
 
     entry_points, module = _build_module(circuits, profile, **kwargs)
@@ -110,5 +116,7 @@ def _build_module(
         module = QiskitModule.from_quantum_circuit(circuit, llvm_module)
         module.accept(BasicQisVisitor(profile, **kwargs))
         entry_points.append(module.entry_point)
-    verify_module(llvm_module)
+    err = llvm_module.verify()
+    if err is not None:
+        raise Exception(err)
     return (entry_points, llvm_module)
