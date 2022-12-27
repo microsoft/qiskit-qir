@@ -15,11 +15,12 @@ import os
 from pathlib import Path
 
 # result_stream, condition value, expected gates
-falsy_single_bit_variations = [ False, 0 ]
+falsy_single_bit_variations = [False, 0]
 
-truthy_single_bit_variations = [ True, 1 ]
+truthy_single_bit_variations = [True, 1]
 
-invalid_single_bit_varitions = [ -1 ]
+invalid_single_bit_varitions = [-1]
+
 
 def compare_reference_ir(generated_bitcode: bytes, name: str) -> None:
     module = pyqir.Module.from_bitcode(pyqir.Context(), generated_bitcode, f"{name}")
@@ -29,11 +30,10 @@ def compare_reference_ir(generated_bitcode: bytes, name: str) -> None:
     expected = Path(file).read_text()
     assert ir == expected
 
+
 @pytest.mark.parametrize("value", falsy_single_bit_variations)
 def test_single_clbit_variations_falsy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_clbit_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_clbit_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -43,11 +43,10 @@ def test_single_clbit_variations_falsy(value: bool) -> None:
     generated_bitcode = to_qir_bitcode(circuit, record_output=False)
     compare_reference_ir(generated_bitcode, "test_single_clbit_variations_falsy")
 
+
 @pytest.mark.parametrize("value", truthy_single_bit_variations)
 def test_single_clbit_variations_truthy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_clbit_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_clbit_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -57,11 +56,10 @@ def test_single_clbit_variations_truthy(value: bool) -> None:
     generated_bitcode = to_qir_bitcode(circuit, record_output=False)
     compare_reference_ir(generated_bitcode, "test_single_clbit_variations_truthy")
 
+
 @pytest.mark.parametrize("value", truthy_single_bit_variations)
 def test_single_register_index_variations_truthy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_register_index_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_register_index_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -69,13 +67,14 @@ def test_single_register_index_variations_truthy(value: bool) -> None:
 
     generated_bitcode = to_qir_bitcode(circuit, record_output=False)
 
-    compare_reference_ir(generated_bitcode, "test_single_register_index_variations_truthy")
+    compare_reference_ir(
+        generated_bitcode, "test_single_register_index_variations_truthy"
+    )
+
 
 @pytest.mark.parametrize("value", falsy_single_bit_variations)
 def test_single_register_index_variations_falsy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_register_index_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_register_index_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -83,13 +82,14 @@ def test_single_register_index_variations_falsy(value: bool) -> None:
 
     generated_bitcode = to_qir_bitcode(circuit, record_output=False)
 
-    compare_reference_ir(generated_bitcode, "test_single_register_index_variations_falsy")
+    compare_reference_ir(
+        generated_bitcode, "test_single_register_index_variations_falsy"
+    )
+
 
 @pytest.mark.parametrize("value", truthy_single_bit_variations)
 def test_single_register_variations_truthy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_register_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_register_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -99,11 +99,10 @@ def test_single_register_variations_truthy(value: bool) -> None:
 
     compare_reference_ir(generated_bitcode, "test_single_register_variations_truthy")
 
+
 @pytest.mark.parametrize("value", falsy_single_bit_variations)
 def test_single_register_variations_falsy(value: bool) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_register_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_register_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -113,11 +112,10 @@ def test_single_register_variations_falsy(value: bool) -> None:
 
     compare_reference_ir(generated_bitcode, "test_single_register_variations_falsy")
 
+
 @pytest.mark.parametrize("value", invalid_single_bit_varitions)
 def test_single_clbit_invalid_variations(value: int) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_clbit_invalid_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_clbit_invalid_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -148,9 +146,7 @@ def test_single_register_index_invalid_variations(value: int) -> None:
 
 @pytest.mark.parametrize("value", invalid_single_bit_varitions)
 def test_single_register_invalid_variations(value: int) -> None:
-    circuit = QuantumCircuit(
-        2, 0, name=f"test_single_register_invalid_variations"
-    )
+    circuit = QuantumCircuit(2, 0, name=f"test_single_register_invalid_variations")
     cr = ClassicalRegister(2, "creg")
     circuit.add_register(cr)
     circuit.measure(0, 0)
@@ -161,31 +157,25 @@ def test_single_register_invalid_variations(value: int) -> None:
     assert exc_info is not None
 
 
-
 two_bit_variations = [
     [False, "falsy"],
     [0, "falsy"],
-    [True,"truthy"],
-    [1,"truthy"],
-    [2,"two"],
-    [3,"three"],
+    [True, "truthy"],
+    [1, "truthy"],
+    [2, "two"],
+    [3, "three"],
 ]
 
 # # -1: 11
 # # -2: 10
 # # -3: 01
 # # -4: 00
-invalid_two_bit_variations = [
-    -4,
-    -3,
-    -2,
-    -1
-]
+invalid_two_bit_variations = [-4, -3, -2, -1]
 
 
 @pytest.mark.parametrize("matrix", two_bit_variations)
 def test_two_bit_register_variations(matrix) -> None:
-    value, name = matrix 
+    value, name = matrix
     circuit = QuantumCircuit(
         3,
         0,
