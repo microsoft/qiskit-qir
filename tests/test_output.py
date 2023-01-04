@@ -19,7 +19,7 @@ def test_single_array():
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 3)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 1)
@@ -43,7 +43,7 @@ def test_no_measure_with_no_registers():
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -58,7 +58,7 @@ def test_no_measure_with_register():
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -80,7 +80,7 @@ def test_branching_on_bit_emits_correct_ir():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("x", 0)
@@ -124,7 +124,7 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("x", 0)
@@ -162,7 +162,7 @@ def test_no_measure_without_registers():
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -184,7 +184,7 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
     generated_qir = to_qir(circuit).splitlines()
 
     test_utils.check_attributes(generated_qir, 5, 5)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -210,7 +210,7 @@ def test_using_static_allocation_is_mapped_correctly():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -230,7 +230,7 @@ def test_record_output_when_true_mapped_correctly():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -250,7 +250,7 @@ def test_record_output_when_false_mapped_correctly():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("h", 0)
@@ -268,7 +268,7 @@ def test_barrier_default_bypass():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("x", 0)
@@ -285,7 +285,7 @@ def test_barrier_with_qubits_default_bypass():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.single_op_call_string("x", 0)
@@ -301,7 +301,7 @@ def test_barrier_with_override():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.generic_op_call_string("barrier", [])
@@ -317,7 +317,7 @@ def test_barrier_with_qubits_with_override():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.generic_op_call_string("barrier", [])
@@ -333,7 +333,7 @@ def test_swap():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.double_op_call_string("swap", 2, 0)
@@ -349,7 +349,7 @@ def test_ccx():
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
-    func = test_utils.find_function(generated_qir)
+    func = test_utils.get_entry_point_body(generated_qir)
 
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.generic_op_call_string("ccx", [2, 0, 1])

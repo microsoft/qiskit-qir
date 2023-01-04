@@ -371,15 +371,3 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             raise UnsupportedOperation(
                 f"The supplied profile is not supported: {profile}."
             )
-
-
-def _get_or_create_function(
-    ty: FunctionType, linkage: Linkage, name: str, module: Module
-) -> Function:
-    existing = next(filter(lambda f: f.name == name, module.functions), None)
-    return existing or Function(
-        ty,
-        linkage,
-        name,
-        module,
-    )

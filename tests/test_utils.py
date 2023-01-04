@@ -70,7 +70,7 @@ def result_record_output_string(res: str) -> str:
 # - leading spaces trimmed
 # - first label skipped
 # - signature and closing braces removed
-def find_function(qir: List[str]) -> List[str]:
+def get_entry_point_body(qir: List[str]) -> List[str]:
     joined = "\n".join(qir)
     mod = Module.from_ir(Context(), joined)
     func = next(filter(is_entry_point, mod.functions))
