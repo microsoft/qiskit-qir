@@ -20,18 +20,20 @@ def test_single_array():
 
     test_utils.check_attributes(generated_qir, 3, 3)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 1)
-    assert func[1] == test_utils.single_op_call_string("s", 2)
-    assert func[2] == test_utils.single_op_call_string("t", 0)
-    assert func[3] == test_utils.measure_call_string("mz", 2, 0)
-    assert func[4] == test_utils.measure_call_string("mz", 0, 1)
-    assert func[5] == test_utils.measure_call_string("mz", 1, 2)
-    assert func[6] == test_utils.array_record_output_string(3)
-    assert func[7] == test_utils.result_record_output_string(2)
-    assert func[8] == test_utils.result_record_output_string(1)
-    assert func[9] == test_utils.result_record_output_string(0)
-    assert func[10] == test_utils.return_string()
-    assert len(func) == 11
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 1)
+    assert func[2] == test_utils.single_op_call_string("s", 2)
+    assert func[3] == test_utils.single_op_call_string("t", 0)
+    assert func[4] == test_utils.measure_call_string("mz", 2, 0)
+    assert func[5] == test_utils.measure_call_string("mz", 0, 1)
+    assert func[6] == test_utils.measure_call_string("mz", 1, 2)
+    assert func[7] == test_utils.array_record_output_string(3)
+    assert func[8] == test_utils.result_record_output_string(2)
+    assert func[9] == test_utils.result_record_output_string(1)
+    assert func[10] == test_utils.result_record_output_string(0)
+    assert func[11] == test_utils.return_string()
+    assert len(func) == 12
 
 
 def test_no_measure_with_no_registers():
@@ -42,9 +44,11 @@ def test_no_measure_with_no_registers():
 
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_no_measure_with_register():
@@ -55,11 +59,13 @@ def test_no_measure_with_register():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.array_record_output_string(1)
-    assert func[2] == test_utils.result_record_output_string(0)
-    assert func[3] == test_utils.return_string()
-    assert len(func) == 4
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.array_record_output_string(1)
+    assert func[3] == test_utils.result_record_output_string(0)
+    assert func[4] == test_utils.return_string()
+    assert len(func) == 5
 
 
 def test_branching_on_bit_emits_correct_ir():
@@ -75,31 +81,33 @@ def test_branching_on_bit_emits_correct_ir():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("x", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.equal("0", 0)
-    assert func[3] == f"br i1 %0, label %then, label %else"
-    assert func[4] == ""
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("x", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.equal("0", 0)
+    assert func[4] == f"br i1 %0, label %then, label %else"
+    assert func[5] == ""
     assert (
-        func[5] == f"then:                                             ; preds = %entry"
+        func[6] == f"then:                                             ; preds = %entry"
     )
-    assert func[6] == test_utils.single_op_call_string("x", 0)
-    assert func[7] == f"br label %continue"
-    assert func[8] == ""
+    assert func[7] == test_utils.single_op_call_string("x", 0)
+    assert func[8] == f"br label %continue"
+    assert func[9] == ""
     assert (
-        func[9] == f"else:                                             ; preds = %entry"
+        func[10] == f"else:                                             ; preds = %entry"
     )
-    assert func[10] == f"br label %continue"
-    assert func[11] == ""
+    assert func[11] == f"br label %continue"
+    assert func[12] == ""
     assert (
-        func[12]
+        func[13]
         == f"continue:                                         ; preds = %else, %then"
     )
-    assert func[13] == test_utils.array_record_output_string(1)
-    assert func[14] == test_utils.result_record_output_string(0)
-    assert func[15] == test_utils.return_string()
+    assert func[14] == test_utils.array_record_output_string(1)
+    assert func[15] == test_utils.result_record_output_string(0)
+    assert func[16] == test_utils.return_string()
 
-    assert len(func) == 16
+    assert len(func) == 17
 
 
 def test_branching_on_register_with_one_bit_emits_correct_ir():
@@ -117,31 +125,33 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("x", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.equal("0", 0)
-    assert func[3] == f"br i1 %0, label %then, label %else"
-    assert func[4] == ""
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("x", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.equal("0", 0)
+    assert func[4] == f"br i1 %0, label %then, label %else"
+    assert func[5] == ""
     assert (
-        func[5] == f"then:                                             ; preds = %entry"
+        func[6] == f"then:                                             ; preds = %entry"
     )
-    assert func[6] == test_utils.single_op_call_string("x", 0)
-    assert func[7] == f"br label %continue"
-    assert func[8] == ""
+    assert func[7] == test_utils.single_op_call_string("x", 0)
+    assert func[8] == f"br label %continue"
+    assert func[9] == ""
     assert (
-        func[9] == f"else:                                             ; preds = %entry"
+        func[10] == f"else:                                             ; preds = %entry"
     )
-    assert func[10] == f"br label %continue"
-    assert func[11] == ""
+    assert func[11] == f"br label %continue"
+    assert func[12] == ""
     assert (
-        func[12]
+        func[13]
         == f"continue:                                         ; preds = %else, %then"
     )
-    assert func[13] == test_utils.array_record_output_string(1)
-    assert func[14] == test_utils.result_record_output_string(0)
-    assert func[15] == test_utils.return_string()
+    assert func[14] == test_utils.array_record_output_string(1)
+    assert func[15] == test_utils.result_record_output_string(0)
+    assert func[16] == test_utils.return_string()
 
-    assert len(func) == 16
+    assert len(func) == 17
 
 
 def test_no_measure_without_registers():
@@ -153,9 +163,11 @@ def test_no_measure_without_registers():
 
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_measurement_into_multiple_registers_is_mapped_correctly():
@@ -173,18 +185,20 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
 
     test_utils.check_attributes(generated_qir, 5, 5)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.measure_call_string("mz", 2, 0)
-    assert func[3] == test_utils.array_record_output_string(2)
-    assert func[4] == test_utils.result_record_output_string(1)
-    assert func[5] == test_utils.result_record_output_string(0)
-    assert func[6] == test_utils.array_record_output_string(3)
-    assert func[7] == test_utils.result_record_output_string(4)
-    assert func[8] == test_utils.result_record_output_string(3)
-    assert func[9] == test_utils.result_record_output_string(2)
-    assert func[10] == test_utils.return_string()
-    assert len(func) == 11
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.measure_call_string("mz", 2, 0)
+    assert func[4] == test_utils.array_record_output_string(2)
+    assert func[5] == test_utils.result_record_output_string(1)
+    assert func[6] == test_utils.result_record_output_string(0)
+    assert func[7] == test_utils.array_record_output_string(3)
+    assert func[8] == test_utils.result_record_output_string(4)
+    assert func[9] == test_utils.result_record_output_string(3)
+    assert func[10] == test_utils.result_record_output_string(2)
+    assert func[11] == test_utils.return_string()
+    assert len(func) == 12
 
 
 def test_using_static_allocation_is_mapped_correctly():
@@ -197,12 +211,14 @@ def test_using_static_allocation_is_mapped_correctly():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.array_record_output_string(1)
-    assert func[3] == test_utils.result_record_output_string(0)
-    assert func[4] == test_utils.return_string()
-    assert len(func) == 5
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.array_record_output_string(1)
+    assert func[4] == test_utils.result_record_output_string(0)
+    assert func[5] == test_utils.return_string()
+    assert len(func) == 6
 
 
 def test_record_output_when_true_mapped_correctly():
@@ -215,12 +231,14 @@ def test_record_output_when_true_mapped_correctly():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.array_record_output_string(1)
-    assert func[3] == test_utils.result_record_output_string(0)
-    assert func[4] == test_utils.return_string()
-    assert len(func) == 5
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.array_record_output_string(1)
+    assert func[4] == test_utils.result_record_output_string(0)
+    assert func[5] == test_utils.return_string()
+    assert len(func) == 6
 
 
 def test_record_output_when_false_mapped_correctly():
@@ -233,10 +251,12 @@ def test_record_output_when_false_mapped_correctly():
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string("h", 0)
-    assert func[1] == test_utils.measure_call_string("mz", 0, 0)
-    assert func[2] == test_utils.return_string()
-    assert len(func) == 3
+
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("h", 0)
+    assert func[2] == test_utils.measure_call_string("mz", 0, 0)
+    assert func[3] == test_utils.return_string()
+    assert len(func) == 4
 
 
 def test_barrier_default_bypass():
@@ -250,10 +270,10 @@ def test_barrier_default_bypass():
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.single_op_call_string("x", 0)
-
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("x", 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_barrier_with_qubits_default_bypass():
@@ -267,9 +287,10 @@ def test_barrier_with_qubits_default_bypass():
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.single_op_call_string("x", 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string("x", 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_barrier_with_override():
@@ -282,9 +303,10 @@ def test_barrier_with_override():
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.generic_op_call_string("barrier", [])
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.generic_op_call_string("barrier", [])
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_barrier_with_qubits_with_override():
@@ -297,9 +319,10 @@ def test_barrier_with_qubits_with_override():
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.generic_op_call_string("barrier", [])
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.generic_op_call_string("barrier", [])
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_swap():
@@ -312,9 +335,10 @@ def test_swap():
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.double_op_call_string("swap", 2, 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.double_op_call_string("swap", 2, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 def test_ccx():
@@ -327,6 +351,7 @@ def test_ccx():
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.generic_op_call_string("ccx", [2, 0, 1])
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.generic_op_call_string("ccx", [2, 0, 1])
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3

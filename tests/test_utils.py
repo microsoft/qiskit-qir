@@ -20,6 +20,8 @@ def _result_string(res: int) -> str:
     else:
         return f"%Result* inttoptr (i64 {res} to %Result*)"
 
+def initialize_call_string() -> str:
+    return "call void @__quantum__rt__initialize(i8* null)"
 
 def single_op_call_string(name: str, qb: int) -> str:
     return f"call void @__quantum__qis__{name}__body({_qubit_string(qb)})"

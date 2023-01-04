@@ -90,9 +90,10 @@ def test_single_qubit_gates(circuit_name, request):
     generated_qir = to_qir(circuit).splitlines()
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.single_op_call_string(qir_op, 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.single_op_call_string(qir_op, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 @pytest.mark.parametrize("circuit_name", adj_op_tests)
@@ -101,9 +102,10 @@ def test_adj_gates(circuit_name, request):
     generated_qir = to_qir(circuit).splitlines()
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.adj_op_call_string(qir_op, 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.adj_op_call_string(qir_op, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 @pytest.mark.parametrize("circuit_name", rotation_tests)
@@ -112,9 +114,10 @@ def test_rotation_gates(circuit_name, request):
     generated_qir = to_qir(circuit).splitlines()
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.rotation_call_string(qir_op, 0.5, 0)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.rotation_call_string(qir_op, 0.5, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 @pytest.mark.parametrize("circuit_name", double_op_tests)
@@ -123,9 +126,10 @@ def test_double_qubit_gates(circuit_name, request):
     generated_qir = to_qir(circuit).splitlines()
     test_utils.check_attributes(generated_qir, 2, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.double_op_call_string(qir_op, 0, 1)
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.double_op_call_string(qir_op, 0, 1)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 @pytest.mark.parametrize("circuit_name", triple_op_tests)
@@ -134,9 +138,10 @@ def test_triple_qubit_gates(circuit_name, request):
     generated_qir = to_qir(circuit).splitlines()
     test_utils.check_attributes(generated_qir, 3, 0)
     func = test_utils.find_function(generated_qir)
-    assert func[0] == test_utils.generic_op_call_string(qir_op, [2, 0, 1])
-    assert func[1] == test_utils.return_string()
-    assert len(func) == 2
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.generic_op_call_string(qir_op, [2, 0, 1])
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
 
 
 @pytest.mark.parametrize("circuit_name", measurement_tests)
@@ -146,8 +151,9 @@ def test_measurement(circuit_name, request):
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.find_function(generated_qir)
 
-    assert func[0] == test_utils.measure_call_string(qir_op, 0, 0)
-    assert func[1] == test_utils.array_record_output_string(1)
-    assert func[2] == test_utils.result_record_output_string(0)
-    assert func[3] == test_utils.return_string()
-    assert len(func) == 4
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.measure_call_string(qir_op, 0, 0)
+    assert func[2] == test_utils.array_record_output_string(1)
+    assert func[3] == test_utils.result_record_output_string(0)
+    assert func[4] == test_utils.return_string()
+    assert len(func) == 5

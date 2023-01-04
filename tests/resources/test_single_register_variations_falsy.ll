@@ -6,6 +6,7 @@ source_filename = "test_single_register_variations"
 
 define void @test_single_register_variations() #0 {
 entry:
+  call void @__quantum__rt__initialize(i8* null)
   call void @__quantum__qis__mz__body(%Qubit* null, %Result* null)
   %0 = call i1 @__quantum__qis__read_result__body(%Result* null)
   br i1 %0, label %then, label %else
@@ -30,6 +31,8 @@ else2:                                            ; preds = %else
 continue3:                                        ; preds = %else2, %then1
   br label %continue
 }
+
+declare void @__quantum__rt__initialize(i8*)
 
 declare void @__quantum__qis__mz__body(%Qubit*, %Result* writeonly) #1
 
