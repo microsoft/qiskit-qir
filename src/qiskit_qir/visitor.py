@@ -107,6 +107,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
     def __init__(self, profile: str = "AdaptiveExecution", **kwargs):
         self._module = None
         self._builder = None
+        self._entry_point = None
         self._qubit_labels = {}
         self._clbit_labels = {}
         self._profile = profile
@@ -124,15 +125,18 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         entry = entry_point(
             self._module, module.name, module.num_qubits, module.num_clbits
         )
-        # we update the parent module with the unique name
-        # created when defining in function in case of conflicts
-        module._entry_point = entry.name
+
+        self._entry_point = entry.name
         self._builder = Builder(context)
         self._builder.insert_at_end(BasicBlock(context, "entry", entry))
 
         i8p = PointerType(IntType(context, 8))
         nullptr = Constant.null(i8p)
         rt.initialize(self._builder, nullptr)
+
+    @property
+    def entry_point(self) -> str:
+        return self._entry_point
 
     def finalize(self):
         self._builder.ret(None)
