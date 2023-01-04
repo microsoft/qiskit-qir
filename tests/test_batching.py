@@ -38,13 +38,13 @@ def get_parameterized_circuit(num_qubits: int, num_params: int) -> List[QuantumC
     return circuits
 
 
-def test_binding_generates_corresponding_entry_points() -> None:
-    for i in range(1, 4):
-        circuits = get_parameterized_circuit(2, i)
-        bitcode = to_qir_bitcode(circuits)
-        mod = Module.from_bitcode(Context(), bitcode)
-        funcs = list(filter(is_entry_point, mod.functions))
-        assert len(funcs) == i
+@pytest.mark.parametrize("num_params", [1, 2, 3])
+def test_binding_generates_corresponding_entry_points(num_params: int) -> None:
+    circuits = get_parameterized_circuit(2, num_params)
+    bitcode = to_qir_bitcode(circuits)
+    mod = Module.from_bitcode(Context(), bitcode)
+    funcs = list(filter(is_entry_point, mod.functions))
+    assert len(funcs) == num_params
 
 
 def test_batch_entry_points_use_circuit_names() -> None:
