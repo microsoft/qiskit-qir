@@ -95,7 +95,8 @@ def test_branching_on_bit_emits_correct_ir():
     assert func[8] == f"br label %continue"
     assert func[9] == ""
     assert (
-        func[10] == f"else:                                             ; preds = %entry"
+        func[10]
+        == f"else:                                             ; preds = %entry"
     )
     assert func[11] == f"br label %continue"
     assert func[12] == ""
@@ -139,7 +140,8 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
     assert func[8] == f"br label %continue"
     assert func[9] == ""
     assert (
-        func[10] == f"else:                                             ; preds = %entry"
+        func[10]
+        == f"else:                                             ; preds = %entry"
     )
     assert func[11] == f"br label %continue"
     assert func[12] == ""

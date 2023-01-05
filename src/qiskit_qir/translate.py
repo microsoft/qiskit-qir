@@ -24,6 +24,7 @@ def to_qir(
     :type profile: ``str``
     :param \**kwargs:
         See below
+    :returns: The LLVM IR string representation of the input.
 
     :Keyword Arguments:
         * *record_output* (``bool``) --
@@ -50,6 +51,7 @@ def to_qir_bitcode(
     :type profile: ``str``
     :param \**kwargs:
         See below
+    :returns: The LLVM bitcode representation of the input.
 
     :Keyword Arguments:
         * *record_output* (``bool``) --
@@ -77,6 +79,9 @@ def to_qir_bitcode_with_entry_points(
     :type profile: ``str``
     :param \**kwargs:
         See below
+    :returns:
+        Tuple containing the the LLVM bitcode representation of the input and
+        the list of used entry point names generated from the input.
 
     :Keyword Arguments:
         * *record_output* (``bool``) --
