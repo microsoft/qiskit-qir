@@ -119,8 +119,9 @@ def _build_module(
     entry_points = []
     for circuit in circuits:
         module = QiskitModule.from_quantum_circuit(circuit, llvm_module)
-        module.accept(BasicQisVisitor(profile, **kwargs))
-        entry_points.append(module.entry_point)
+        visitor = BasicQisVisitor(profile, **kwargs)
+        module.accept(visitor)
+        entry_points.append(visitor.entry_point)
     err = llvm_module.verify()
     if err is not None:
         raise Exception(err)

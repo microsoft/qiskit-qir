@@ -49,7 +49,6 @@ class QiskitModule:
         elements: List[_QuantumCircuitElement],
     ):
         self._name = name
-        self._entry_point: str = ""
         self._module = module
         self._elements = elements
         self._num_qubits = num_qubits
@@ -71,10 +70,6 @@ class QiskitModule:
     @property
     def num_clbits(self) -> int:
         return self._num_clbits
-
-    @property
-    def entry_point(self) -> str:
-        return self._entry_point
 
     @classmethod
     def from_quantum_circuit(
@@ -107,7 +102,6 @@ class QiskitModule:
         visitor.visit_qiskit_module(self)
         # we update the parent module with the unique name
         # created when defining in function in case of conflicts
-        self._entry_point = visitor.entry_point
         for element in self._elements:
             element.accept(visitor)
         visitor.record_output(self)
