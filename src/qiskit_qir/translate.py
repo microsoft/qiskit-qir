@@ -5,7 +5,7 @@
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from typing import List, Tuple, Union
-from pyqir import Context, Module
+from pyqir import Context, Module, qir_module
 from qiskit_qir.elements import QiskitModule
 
 
@@ -115,7 +115,7 @@ def _build_module(
     if len(circuits) == 0:
         raise ValueError("No QuantumCircuits provided")
 
-    llvm_module = Module(Context(), name)
+    llvm_module = qir_module(Context(), name)
     entry_points = []
     for circuit in circuits:
         module = QiskitModule.from_quantum_circuit(circuit, llvm_module)
