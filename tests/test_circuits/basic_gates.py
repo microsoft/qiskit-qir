@@ -29,7 +29,7 @@ _rotations = {"rx": "rx", "ry": "ry", "rz": "rz"}
 
 _two_qubit_gates = {"cx": "cnot", "cz": "cz", "swap": "swap"}
 
-_three_qubit_gates = {"ccx": "ccnot"}
+_three_qubit_gates = {"ccx": "ccx"}
 
 
 def _fixture_name(s: str) -> str:

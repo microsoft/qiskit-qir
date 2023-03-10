@@ -4,7 +4,8 @@
 ##
 __author__ = """Microsoft Corporation"""
 __email__ = "que-contacts@microsoft.com"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
-from qiskit_qir.translate import to_qir, to_qir_bitcode
-from qiskit_qir.visitor import SUPPORTED_INSTRUCTIONS
+from qiskit_qir.translate import (
+    to_qir_module
+)

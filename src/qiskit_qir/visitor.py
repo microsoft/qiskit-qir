@@ -8,7 +8,24 @@ from abc import ABCMeta, abstractmethod
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.instruction import Instruction
-from pyqir.generator import SimpleModule, BasicQisBuilder, types
+from qiskit.circuit.bit import Bit
+import pyqir.qis as qis
+import pyqir.rt as rt
+import pyqir
+from pyqir import (
+    BasicBlock,
+    Builder,
+    Constant,
+    Function,
+    FunctionType,
+    IntType,
+    Linkage,
+    Module,
+    PointerType,
+    const,
+    entry_point,
+    qubit_id,
+)
 from typing import List, Union
 
 from qiskit_qir.capability import (
@@ -16,6 +33,7 @@ from qiskit_qir.capability import (
     ConditionalBranchingOnResultError,
     QubitUseAfterMeasurementError,
 )
+from qiskit_qir.elements import QiskitModule
 
 _log = logging.getLogger(name=__name__)
 
@@ -86,64 +104,48 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 
 
 class BasicQisVisitor(QuantumCircuitElementVisitor):
-    def __init__(self, profile: str = "AdaptiveExecution", kwargs={}):
+    def __init__(self, profile: str = "AdaptiveExecution", **kwargs):
         self._module = None
         self._builder = None
+        self._entry_point = None
         self._qubit_labels = {}
         self._clbit_labels = {}
         self._profile = profile
         self._capabilities = self._map_profile_to_capabilities(profile)
         self._measured_qubits = {}
-        self._use_static_qubit_alloc = kwargs.get("use_static_qubit_alloc", True)
-        self._use_static_result_alloc = kwargs.get("use_static_result_alloc", True)
         self._emit_barrier_calls = kwargs.get("emit_barrier_calls", False)
         self._record_output = kwargs.get("record_output", True)
 
-    def visit_qiskit_module(self, module):
+    def visit_qiskit_module(self, module: QiskitModule):
         _log.debug(
             f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})"
         )
-        self._module = SimpleModule(
-            name=module.name,
-            num_qubits=module.num_qubits,
-            num_results=module.num_clbits,
-        )
-        self._module.use_static_qubit_alloc(self._use_static_qubit_alloc)
-        self._module.use_static_result_alloc(self._use_static_result_alloc)
-
-        self._builder = BasicQisBuilder(self._module.builder)
-
-        self._barrier = self._module.add_external_function(
-            "__quantum__qis__barrier__body", types.Function([], types.VOID)
-        )
-        self._ccx = self._module.add_external_function(
-            "__quantum__qis__ccnot__body",
-            types.Function([types.QUBIT, types.QUBIT, types.QUBIT], types.VOID),
-        )
-        self._swap = self._module.add_external_function(
-            "__quantum__qis__swap__body",
-            types.Function([types.QUBIT, types.QUBIT], types.VOID),
+        self._module = module.module
+        context = self._module.context
+        entry = entry_point(
+            self._module, module.name, module.num_qubits, module.num_clbits
         )
 
-    def record_output(self, module):
+        self._entry_point = entry.name
+        self._builder = Builder(context)
+        self._builder.insert_at_end(BasicBlock(context, "entry", entry))
+
+        i8p = PointerType(IntType(context, 8))
+        nullptr = Constant.null(i8p)
+        rt.initialize(self._builder, nullptr)
+
+    @property
+    def entry_point(self) -> str:
+        return self._entry_point
+
+    def finalize(self):
+        self._builder.ret(None)
+
+    def record_output(self, module: QiskitModule):
         if self._record_output == False:
             return
 
-        # produces output records of exactly "RESULT ARRAY_START"
-        array_start_record_output = self._module.add_external_function(
-            "__quantum__rt__array_start_record_output", types.Function([], types.VOID)
-        )
-
-        # produces output records of exactly "RESULT ARRAY_END"
-        array_end_record_output = self._module.add_external_function(
-            "__quantum__rt__array_end_record_output", types.Function([], types.VOID)
-        )
-
-        # produces output records of exactly "RESULT 0" or "RESULT 1"
-        result_record_output = self._module.add_external_function(
-            "__quantum__rt__result_record_output",
-            types.Function([types.RESULT], types.VOID),
-        )
+        i8p = PointerType(IntType(self._module.context, 8))
 
         # qiskit inverts the ordering of the results within each register
         # but keeps the overall register ordering
@@ -152,12 +154,15 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         # range so we need to go to -1 instead of 0
         logical_id_base = 0
         for size in module.reg_sizes:
-            self._module.builder.call(array_start_record_output, [])
+            rt.array_record_output(
+                self._builder,
+                const(IntType(self._module.context, 64), size),
+                Constant.null(i8p),
+            )
             for index in range(size - 1, -1, -1):
-                result_ref = self._module.results[logical_id_base + index]
-                self._module.builder.call(result_record_output, [result_ref])
+                result_ref = pyqir.result(self._module.context, logical_id_base + index)
+                rt.result_record_output(self._builder, result_ref, Constant.null(i8p))
             logical_id_base += size
-            self._module.builder.call(array_end_record_output, [])
 
     def visit_register(self, register):
         _log.debug(f"Visiting register '{register.name}'")
@@ -200,11 +205,17 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             )
             self.visit_instruction(inst, mapped_qbits, mapped_clbits)
 
-    def visit_instruction(self, instruction, qargs, cargs, skip_condition=False):
+    def visit_instruction(
+        self,
+        instruction: Instruction,
+        qargs: List[Bit],
+        cargs: List[Bit],
+        skip_condition=False,
+    ):
         qlabels = [self._qubit_labels.get(bit) for bit in qargs]
         clabels = [self._clbit_labels.get(bit) for bit in cargs]
-        qubits = [self._module.qubits[n] for n in qlabels]
-        results = [self._module.results[n] for n in clabels]
+        qubits = [pyqir.qubit(self._module.context, n) for n in qlabels]
+        results = [pyqir.result(self._module.context, n) for n in clabels]
 
         if (
             instruction.condition is not None
@@ -224,10 +235,10 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
             if isinstance(instruction.condition[0], Clbit):
                 bit_label = self._clbit_labels.get(instruction.condition[0])
-                conditions = [self._module.results[bit_label]]
+                conditions = [pyqir.result(self._module.context, bit_label)]
             else:
                 conditions = [
-                    self._module.results[self._clbit_labels.get(bit)]
+                    pyqir.result(self._module.context, self._clbit_labels.get(bit))
                     for bit in instruction.condition[0]
                 ]
 
@@ -254,11 +265,12 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
             def _branch(conditions_values):
                 try:
-                    result, val = next(conditions_values)
+                    cond, val = next(conditions_values)
 
                     def __branch():
-                        self._builder.if_result(
-                            result=result,
+                        qis.if_result(
+                            self._builder,
+                            cond,
                             one=_branch(conditions_values) if val == "1" else None,
                             zero=_branch(conditions_values) if val == "0" else None,
                         )
@@ -282,8 +294,8 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             or "mz" == instruction.name
         ):
             for qubit, result in zip(qubits, results):
-                self._measured_qubits[qubit] = True
-                self._builder.m(qubit, result)
+                self._measured_qubits[qubit_id(qubit)] = True
+                qis.mz(self._builder, qubit, result)
         else:
             if not self._capabilities & Capability.QUBIT_USE_AFTER_MEASUREMENT:
                 # If we have a supported instruction, apply the capability
@@ -291,51 +303,51 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 # back into this function with a supported name and we'll
                 # verify at that time
                 if instruction.name in _SUPPORTED_INSTRUCTIONS:
-                    if any(map(self._measured_qubits.get, qubits)):
+                    if any(map(self._measured_qubits.get, map(qubit_id, qubits))):
                         raise QubitUseAfterMeasurementError(
                             instruction, qargs, cargs, self._profile
                         )
             if "barrier" == instruction.name:
                 if self._emit_barrier_calls:
-                    self._module.builder.call(self._barrier, [])
+                    qis.barrier(self._builder)
             elif "delay" == instruction.name:
                 pass
             elif "swap" == instruction.name:
-                self._module.builder.call(self._swap, qubits)
+                qis.swap(self._builder, *qubits)
             elif "ccx" == instruction.name:
-                self._module.builder.call(self._ccx, qubits)
+                qis.ccx(self._builder, *qubits)
             elif "cx" == instruction.name:
-                self._builder.cx(*qubits)
+                qis.cx(self._builder, *qubits)
             elif "cz" == instruction.name:
-                self._builder.cz(*qubits)
+                qis.cz(self._builder, *qubits)
             elif "h" == instruction.name:
-                self._builder.h(*qubits)
+                qis.h(self._builder, *qubits)
             elif "reset" == instruction.name:
-                self._builder.reset(qubits[0])
+                qis.reset(self._builder, qubits[0])
             elif "rx" == instruction.name:
-                self._builder.rx(*instruction.params, *qubits)
+                qis.rx(self._builder, *instruction.params, *qubits)
             elif "ry" == instruction.name:
-                self._builder.ry(*instruction.params, *qubits)
+                qis.ry(self._builder, *instruction.params, *qubits)
             elif "rz" == instruction.name:
-                self._builder.rz(*instruction.params, *qubits)
+                qis.rz(self._builder, *instruction.params, *qubits)
             elif "s" == instruction.name:
-                self._builder.s(*qubits)
+                qis.s(self._builder, *qubits)
             elif "sdg" == instruction.name:
-                self._builder.s_adj(*qubits)
+                qis.s_adj(self._builder, *qubits)
             elif "t" == instruction.name:
-                self._builder.t(*qubits)
+                qis.t(self._builder, *qubits)
             elif "tdg" == instruction.name:
-                self._builder.t_adj(*qubits)
+                qis.t_adj(self._builder, *qubits)
             elif "x" == instruction.name:
-                self._builder.x(*qubits)
+                qis.x(self._builder, *qubits)
             elif "y" == instruction.name:
-                self._builder.y(*qubits)
+                qis.y(self._builder, *qubits)
             elif "z" == instruction.name:
-                self._builder.z(*qubits)
+                qis.z(self._builder, *qubits)
             elif "id" == instruction.name:
                 # See: https://github.com/qir-alliance/pyqir/issues/74
-                self._builder.x(self._module.qubits[0])
-                self._builder.x(self._module.qubits[0])
+                qis.x(self._builder, pyqir.qubit(self._module.context, 0))
+                qis.x(self._builder, pyqir.qubit(self._module.context, 0))
             elif instruction.definition:
                 _log.debug(
                     f"About to process composite instruction {instruction.name} with qubits {qargs}"
@@ -348,7 +360,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 )
 
     def ir(self) -> str:
-        return self._module.ir()
+        return str(self._module)
 
     def bitcode(self) -> bytes:
         return self._module.bitcode()
