@@ -7,8 +7,5 @@ __email__ = "que-contacts@microsoft.com"
 __version__ = "0.3.0"
 
 from qiskit_qir.translate import (
-    to_qir,
-    to_qir_bitcode,
-    to_qir_bitcode_with_entry_points,
+    to_qir_module
 )
-from qiskit_qir.visitor import SUPPORTED_INSTRUCTIONS

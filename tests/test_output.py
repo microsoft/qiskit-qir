@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 ##
-from qiskit_qir.translate import to_qir
+from qiskit_qir.translate import to_qir_module
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 
 import test_utils
@@ -16,7 +16,7 @@ def test_single_array():
     circuit.t(0)
     circuit.measure([0, 1, 2], [2, 0, 1])
 
-    generated_qir = to_qir(circuit).splitlines()
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 3)
     func = test_utils.get_entry_point_body(generated_qir)
@@ -40,7 +40,7 @@ def test_no_measure_with_no_registers():
     circuit = QuantumCircuit(1, 0)
     circuit.name = "test_no_measure_with_no_registers"
     circuit.h(0)
-    generated_qir = to_qir(circuit).splitlines()
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.get_entry_point_body(generated_qir)
@@ -55,7 +55,7 @@ def test_no_measure_with_register():
     circuit = QuantumCircuit(1, 1)
     circuit.name = "test_no_measure_with_register"
     circuit.h(0)
-    generated_qir = to_qir(circuit).splitlines()
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
     func = test_utils.get_entry_point_body(generated_qir)
@@ -76,7 +76,7 @@ def test_branching_on_bit_emits_correct_ir():
     circuit.measure(0, 0)
     circuit.x(0).c_if(cr[0], 1)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -121,7 +121,7 @@ def test_branching_on_register_with_one_bit_emits_correct_ir():
     circuit.measure(0, 0)
     circuit.x(0).c_if(cr, 1)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -161,7 +161,7 @@ def test_no_measure_without_registers():
     circuit.name = "test_no_measure_no_registers"
     circuit.h(0)
 
-    generated_qir = to_qir(circuit).splitlines()
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
     func = test_utils.get_entry_point_body(generated_qir)
@@ -183,7 +183,7 @@ def test_measurement_into_multiple_registers_is_mapped_correctly():
 
     circuit.measure([0, 0], [0, 2])
 
-    generated_qir = to_qir(circuit).splitlines()
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
 
     test_utils.check_attributes(generated_qir, 5, 5)
     func = test_utils.get_entry_point_body(generated_qir)
@@ -208,7 +208,7 @@ def test_using_static_allocation_is_mapped_correctly():
     circuit.h(0)
     circuit.measure(0, 0)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -228,7 +228,7 @@ def test_record_output_when_true_mapped_correctly():
     circuit.h(0)
     circuit.measure(0, 0)
 
-    ir = to_qir(circuit, record_output=True)
+    ir = str(to_qir_module(circuit, record_output=True)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -248,7 +248,7 @@ def test_record_output_when_false_mapped_correctly():
     circuit.h(0)
     circuit.measure(0, 0)
 
-    ir = to_qir(circuit, record_output=False)
+    ir = str(to_qir_module(circuit, record_output=False)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 1)
@@ -266,7 +266,7 @@ def test_barrier_default_bypass():
     circuit.barrier()
     circuit.x(0)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
@@ -283,7 +283,7 @@ def test_barrier_with_qubits_default_bypass():
     circuit.barrier([2, 0, 1])
     circuit.x(0)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
@@ -299,7 +299,7 @@ def test_barrier_with_override():
     circuit = QuantumCircuit(1)
     circuit.barrier()
 
-    ir = to_qir(circuit, emit_barrier_calls=True)
+    ir = str(to_qir_module(circuit, emit_barrier_calls=True)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 1, 0)
@@ -315,7 +315,7 @@ def test_barrier_with_qubits_with_override():
     circuit = QuantumCircuit(3)
     circuit.barrier([2, 0, 1])
 
-    ir = to_qir(circuit, emit_barrier_calls=True)
+    ir = str(to_qir_module(circuit, emit_barrier_calls=True)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
@@ -331,7 +331,7 @@ def test_swap():
     circuit = QuantumCircuit(3)
     circuit.swap(2, 0)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)
@@ -347,7 +347,7 @@ def test_ccx():
     circuit = QuantumCircuit(3)
     circuit.ccx(2, 0, 1)
 
-    ir = to_qir(circuit)
+    ir = str(to_qir_module(circuit)[0])
     generated_qir = ir.splitlines()
 
     test_utils.check_attributes(generated_qir, 3, 0)

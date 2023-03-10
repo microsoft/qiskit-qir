@@ -9,12 +9,13 @@ from pyqir import Context, Module, qir_module
 from qiskit_qir.elements import QiskitModule
 
 
-def to_qir(
+def to_qir_module(
     circuits: Union[QuantumCircuit, List[QuantumCircuit]],
     profile: str = "AdaptiveExecution",
     **kwargs
-) -> str:
-    r"""Converts the Qiskit QuantumCircuit to QIR as a string
+) -> Tuple[Module, List[str]]:
+    r"""Converts the Qiskit QuantumCircuit(s) to a QIR Module with
+    its entry point names.
 
     :param circuits:
         Qiskit circuit(s) to be converted to QIR
@@ -24,63 +25,8 @@ def to_qir(
     :type profile: ``str``
     :param \**kwargs:
         See below
-    :returns: The LLVM IR string representation of the input.
-
-    :Keyword Arguments:
-        * *record_output* (``bool``) --
-          Whether to record output calls for registers, default `True`
-        * *emit_barrier_calls* (``bool``) --
-          Whether to emit barrier calls in the QIR, default `False`
-    """
-    _, module = _build_module(circuits, profile, **kwargs)
-    return str(module)
-
-
-def to_qir_bitcode(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
-    profile: str = "AdaptiveExecution",
-    **kwargs
-) -> bytes:
-    r"""Converts the Qiskit QuantumCircuit to QIR bitcode as bytes
-
-    :param circuits:
-        Qiskit circuit to be converted to QIR
-    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit]]``
-    :param profile:
-        The target profile for capability verification
-    :type profile: ``str``
-    :param \**kwargs:
-        See below
-    :returns: The LLVM bitcode representation of the input.
-
-    :Keyword Arguments:
-        * *record_output* (``bool``) --
-          Whether to record output calls for registers, default `True`
-        * *emit_barrier_calls* (``bool``) --
-          Whether to emit barrier calls in the QIR, default `False`
-    """
-
-    _, module = _build_module(circuits, profile, **kwargs)
-    return module.bitcode
-
-
-def to_qir_bitcode_with_entry_points(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
-    profile: str = "AdaptiveExecution",
-    **kwargs
-) -> Tuple[bytes, List[str]]:
-    r"""Converts the Qiskit QuantumCircuit to QIR bitcode as bytes
-
-    :param circuits:
-        Qiskit circuit to be converted to QIR
-    :type circuit: ``Union[QuantumCircuit, List[QuantumCircuit]]``
-    :param profile:
-        The target profile for capability verification
-    :type profile: ``str``
-    :param \**kwargs:
-        See below
     :returns:
-        Tuple containing the the LLVM bitcode representation of the input and
+        Tuple containing the the QIR ``pyqir.Module`` representation of the input and
         the list of used entry point names generated from the input.
 
     :Keyword Arguments:
@@ -90,15 +36,6 @@ def to_qir_bitcode_with_entry_points(
           Whether to emit barrier calls in the QIR, default `False`
     """
 
-    entry_points, module = _build_module(circuits, profile, **kwargs)
-    return (module.bitcode, entry_points)
-
-
-def _build_module(
-    circuits: Union[QuantumCircuit, List[QuantumCircuit]],
-    profile: str = "AdaptiveExecution",
-    **kwargs
-) -> Tuple[List[str], Module]:
     name = "batch"
     if isinstance(circuits, QuantumCircuit):
         name = circuits.name
@@ -125,4 +62,4 @@ def _build_module(
     err = llvm_module.verify()
     if err is not None:
         raise Exception(err)
-    return (entry_points, llvm_module)
+    return (llvm_module, entry_points)

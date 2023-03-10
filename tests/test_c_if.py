@@ -3,7 +3,7 @@
 # Licensed under the MIT License.
 ##
 
-from qiskit_qir.translate import to_qir_bitcode
+from qiskit_qir.translate import to_qir_module
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.circuit import Clbit
 from qiskit.circuit.exceptions import CircuitError
@@ -40,7 +40,7 @@ def test_single_clbit_variations_falsy(value: bool) -> None:
     bit: Clbit = cr[0]
     circuit.measure(1, 1).c_if(bit, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
     compare_reference_ir(generated_bitcode, "test_single_clbit_variations_falsy")
 
 
@@ -53,7 +53,7 @@ def test_single_clbit_variations_truthy(value: bool) -> None:
     bit: Clbit = cr[0]
     circuit.measure(1, 1).c_if(bit, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
     compare_reference_ir(generated_bitcode, "test_single_clbit_variations_truthy")
 
 
@@ -65,7 +65,7 @@ def test_single_register_index_variations_truthy(value: bool) -> None:
     circuit.measure(0, 0)
     circuit.measure(1, 1).c_if(0, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
 
     compare_reference_ir(
         generated_bitcode, "test_single_register_index_variations_truthy"
@@ -80,7 +80,7 @@ def test_single_register_index_variations_falsy(value: bool) -> None:
     circuit.measure(0, 0)
     circuit.measure(1, 1).c_if(0, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
 
     compare_reference_ir(
         generated_bitcode, "test_single_register_index_variations_falsy"
@@ -95,7 +95,7 @@ def test_single_register_variations_truthy(value: bool) -> None:
     circuit.measure(0, 0)
     circuit.measure(1, 1).c_if(cr, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
 
     compare_reference_ir(generated_bitcode, "test_single_register_variations_truthy")
 
@@ -108,7 +108,7 @@ def test_single_register_variations_falsy(value: bool) -> None:
     circuit.measure(0, 0)
     circuit.measure(1, 1).c_if(cr, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
 
     compare_reference_ir(generated_bitcode, "test_single_register_variations_falsy")
 
@@ -191,7 +191,7 @@ def test_two_bit_register_variations(matrix) -> None:
     circuit.measure(1, 1)
     circuit.measure(2, 2).c_if(cr, value)
 
-    generated_bitcode = to_qir_bitcode(circuit, record_output=False)
+    generated_bitcode = to_qir_module(circuit, record_output=False)[0].bitcode
 
     compare_reference_ir(generated_bitcode, f"test_two_bit_register_variations_{name}")
 
