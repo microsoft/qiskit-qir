@@ -100,8 +100,6 @@ class QiskitModule:
 
     def accept(self, visitor):
         visitor.visit_qiskit_module(self)
-        # we update the parent module with the unique name
-        # created when defining in function in case of conflicts
         for element in self._elements:
             element.accept(visitor)
         visitor.record_output(self)
