@@ -6,7 +6,7 @@ Qiskit to QIR translator.
 
 ```python
 from qiskit import QuantumCircuit
-from qiskit_qir import to_qir
+from qiskit_qir import to_qir_module
 
 circuit = QuantumCircuit(3, 3, name="my-circuit")
 circuit.h(0)
@@ -14,17 +14,19 @@ circuit.cx(0, 1)
 circuit.cx(1, 2)
 circuit.measure([0,1,2], [0, 1, 2])
 
-qir = to_qir(circuit)
+module, entry_points = to_qir_module(circuit)
+bitcode = module.bitcode
+ir = str(module)
 ```
 
 ## Installation
 
-Install `pyqir-generator` and `qiskit-qir` with `pip`:
+Install `qiskit-qir` with `pip`:
 
 ```bash
-pip install pyqir-generator
 pip install qiskit-qir
 ```
+> Note: this will automatically install PyQIR if needed.
 
 ## Development
 
