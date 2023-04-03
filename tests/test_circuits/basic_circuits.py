@@ -117,3 +117,18 @@ def ghz_with_delay():
     circuit.measure([0, 1, 2], [0, 1, 2])
 
     return circuit
+
+@pytest.fixture()
+def measure_x_as_subroutine():
+    measure_x_circuit = QuantumCircuit(1, 1, name='measure_x')
+    measure_x_circuit.h(0)
+    measure_x_circuit.measure(0, 0)
+    measure_x_circuit.h(0)
+    measure_x_gate = measure_x_circuit.to_instruction()
+    qq = QuantumRegister(1, name="qq")
+    cr = ClassicalRegister(1, name="cr")
+    circuit = QuantumCircuit(qq, cr)
+    circuit.name = "Qiskit Sample - Measure in the X-basis as a subroutine"
+    circuit.append(measure_x_gate, [0], [0])
+
+    return circuit

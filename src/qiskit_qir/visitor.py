@@ -199,7 +199,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             )
         for (inst, i_qargs, i_cargs) in subcircuit.data:
             mapped_qbits = [qargs[subcircuit.qubits.index(i)] for i in i_qargs]
-            mapped_clbits = [cargs[subcircuit.clbits.index] for i in i_cargs]
+            mapped_clbits = [cargs[subcircuit.clbits.index(i)] for i in i_cargs]
             _log.debug(
                 f"Processing sub-instruction {inst.name} with mapped qubits {mapped_qbits}"
             )
