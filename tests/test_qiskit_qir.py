@@ -16,6 +16,7 @@ from test_circuits.control_flow_circuits import cf_fixtures
 from test_circuits.basic_gates import (
     single_op_tests,
     adj_op_tests,
+    delay_tests,
     rotation_tests,
     double_op_tests,
     triple_op_tests,
@@ -116,6 +117,23 @@ def test_rotation_gates(circuit_name, request):
     func = test_utils.get_entry_point_body(generated_qir)
     assert func[0] == test_utils.initialize_call_string()
     assert func[1] == test_utils.rotation_call_string(qir_op, 0.5, 0)
+    assert func[2] == test_utils.return_string()
+    assert len(func) == 3
+
+
+@pytest.mark.parametrize("circuit_name", delay_tests)
+def test_delay_gate(circuit_name, request):
+    qir_op, unit, circuit = request.getfixturevalue(circuit_name)
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
+    test_utils.check_attributes(generated_qir, 1, 0)
+    func = test_utils.get_entry_point_body(generated_qir)
+    assert func[0] == test_utils.initialize_call_string()
+    if  unit == 'dt':
+        assert func[1] == test_utils.rotation_call_string(qir_op, 1, 0)
+    else:
+        multipliers = {"s": 1e6, "ms": 1e3, "us": 1, "ns": 1e-3, "ps": 1e-6}
+        duration = 0.5 * multipliers[unit]
+        assert func[1] == test_utils.rotation_call_string(qir_op, duration, 0)
     assert func[2] == test_utils.return_string()
     assert len(func) == 3
 
