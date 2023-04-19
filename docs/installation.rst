@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/msr-quarc/qiskit-qir
+    $ git clone git://github.com/microsoft/qiskit-qir
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/msr-quarc/qiskit-qir/tarball/master
+    $ curl -OJL https://github.com/microsoft/qiskit-qir/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/msr-quarc/qiskit-qir
-.. _tarball: https://github.com/msr-quarc/qiskit-qir/tarball/master
+.. _Github repo: https://github.com/microsoft/qiskit-qir
+.. _tarball: https://github.com/microsoft/qiskit-qir/tarball/main
