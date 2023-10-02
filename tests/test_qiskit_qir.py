@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 import logging
 
+from qiskit import QuantumCircuit
 from qiskit_qir.elements import QiskitModule
 from qiskit_qir.visitor import BasicQisVisitor
 from qiskit_qir.translate import to_qir_module
@@ -137,6 +138,15 @@ def test_delay_gate(circuit_name, request):
     assert func[2] == test_utils.return_string()
     assert len(func) == 3
 
+def test_two_delay_gates_single_declaration():
+    circuit = QuantumCircuit(1)
+    circuit.delay(1, unit='dt')
+    circuit.delay(2, unit='dt')
+    generated_qir = str(to_qir_module(circuit)[0]).splitlines()
+    func = test_utils.get_entry_point_body(generated_qir)
+    assert func[0] == test_utils.initialize_call_string()
+    assert func[1] == test_utils.rotation_call_string('delay', 1, 0)
+    assert func[2] == test_utils.rotation_call_string('delay', 2, 0)
 
 @pytest.mark.parametrize("circuit_name", double_op_tests)
 def test_double_qubit_gates(circuit_name, request):

@@ -115,6 +115,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
         self._measured_qubits = {}
         self._emit_barrier_calls = kwargs.get("emit_barrier_calls", False)
         self._record_output = kwargs.get("record_output", True)
+        self._delay_declaration = None
 
     def visit_qiskit_module(self, module: QiskitModule):
         _log.debug(
@@ -392,6 +393,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
 
     def _call_delay_instruction(self, duration: float, qubit: Constant) -> None:
         assert self._module is not None
-        declaration = self._declare_delay_instruction()
+        # Ensure we are using the same delay instruction once we declared it,
+        # if we call it multiple times.
+        if self._delay_declaration is None:
+            self._delay_declaration = self._declare_delay_instruction()
         double = pyqir.Type.double(self._module.context)
-        self._builder.call(declaration, [const(double, duration), qubit])
+        self._builder.call(self._delay_declaration, [const(double, duration), qubit])
