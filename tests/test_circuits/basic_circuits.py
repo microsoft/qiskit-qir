@@ -42,7 +42,7 @@ def unroll():
     circ = QuantumCircuit(3)
     circ.ccx(0, 1, 2)
     circ.crz(theta=0.1, control_qubit=0, target_qubit=1)
-    circ.id(0)
+    circ.id(2)
 
     return circ.decompose()
 
