@@ -12,7 +12,7 @@ core_tests = [
     "teleport",
     "unroll",
     "teleport_with_subroutine",
-    "measure_x_as_subroutine"
+    "measure_x_as_subroutine",
 ] + random_fixtures
 
 noop_tests = ["bernstein_vazirani_with_delay", "ghz_with_delay"]

@@ -22,9 +22,9 @@ def for_loop():
     circuit = QuantumCircuit(4, 0)
     circuit.name = "Simple for-loop circuit"
     circuit.h(3)
-    with circuit.for_loop(range(3)) as q:
+    with circuit.for_loop(range(3)):
         # Qiskit doesn't (yet) support cnot(3, i)
-        circuit.cnot(3, 0)
+        circuit.cx(3, 0)
     return circuit
 
 
