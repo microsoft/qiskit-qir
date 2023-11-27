@@ -346,8 +346,9 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 qis.z(self._builder, *qubits)
             elif "id" == instruction.name:
                 # See: https://github.com/qir-alliance/pyqir/issues/74
-                qis.x(self._builder, pyqir.qubit(self._module.context, 0))
-                qis.x(self._builder, pyqir.qubit(self._module.context, 0))
+                qubit = pyqir.qubit(self._module.context, qubit_id(*qubits))
+                qis.x(self._builder, qubit)
+                qis.x(self._builder, qubit)
             elif instruction.definition:
                 _log.debug(
                     f"About to process composite instruction {instruction.name} with qubits {qargs}"
