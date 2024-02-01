@@ -41,6 +41,7 @@ class _Instruction(_QuantumCircuitElement):
 class QiskitModule:
     def __init__(
         self,
+        circuit: QuantumCircuit,
         name: str,
         module: Module,
         num_qubits: int,
@@ -48,12 +49,17 @@ class QiskitModule:
         reg_sizes: List[int],
         elements: List[_QuantumCircuitElement],
     ):
+        self._circuit = circuit
         self._name = name
         self._module = module
         self._elements = elements
         self._num_qubits = num_qubits
         self._num_clbits = num_clbits
         self.reg_sizes = reg_sizes
+
+    @property
+    def circuit(self) -> QuantumCircuit:
+        return self._circuit
 
     @property
     def name(self) -> str:
@@ -90,6 +96,7 @@ class QiskitModule:
         if module is None:
             module = Module(Context(), circuit.name)
         return cls(
+            circuit=circuit,
             name=circuit.name,
             module=module,
             num_qubits=circuit.num_qubits,

@@ -106,6 +106,7 @@ class QuantumCircuitElementVisitor(metaclass=ABCMeta):
 class BasicQisVisitor(QuantumCircuitElementVisitor):
     def __init__(self, profile: str = "AdaptiveExecution", **kwargs):
         self._module = None
+        self._qiskitModule: QiskitModule | None = None
         self._builder = None
         self._entry_point = None
         self._qubit_labels = {}
@@ -121,6 +122,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             f"Visiting Qiskit module '{module.name}' ({module.num_qubits}, {module.num_clbits})"
         )
         self._module = module.module
+        self._qiskitModule = module
         context = self._module.context
         entry = entry_point(
             self._module, module.name, module.num_qubits, module.num_clbits
@@ -221,7 +223,7 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
             instruction.condition is not None
         ) and not self._capabilities & Capability.CONDITIONAL_BRANCHING_ON_RESULT:
             raise ConditionalBranchingOnResultError(
-                instruction, qargs, cargs, self._profile
+                self._qiskitModule.circuit, instruction, qargs, cargs, self._profile
             )
 
         labels = ", ".join([str(l) for l in qlabels + clabels])
@@ -305,7 +307,11 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 if instruction.name in _SUPPORTED_INSTRUCTIONS:
                     if any(map(self._measured_qubits.get, map(qubit_id, qubits))):
                         raise QubitUseAfterMeasurementError(
-                            instruction, qargs, cargs, self._profile
+                            self._qiskitModule.circuit,
+                            instruction,
+                            qargs,
+                            cargs,
+                            self._profile,
                         )
             if "barrier" == instruction.name:
                 if self._emit_barrier_calls:
