@@ -9,4 +9,4 @@ twine==4.0.2
 pytest==7.4.4
 black==24.1.1
 pyqir==0.10.0
-qiskit==1.0.0b1
+qiskit==1.0.0rc1

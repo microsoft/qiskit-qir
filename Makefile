@@ -102,7 +102,7 @@ servedocs: docs ## compile the docs watching for changes
 	$(PYTHON) -m watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
 test: ## run tests quickly with the default Python
-	$(PYTHON) -m pytest -Walways
+	$(PYTHON) -m pytest
 
 test-all: ## run tests on every Python version with tox
 	$(PYTHON) -m tox
