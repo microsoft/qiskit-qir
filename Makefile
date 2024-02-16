@@ -1,4 +1,9 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 lint/black
+##
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+##
+
+.PHONY: clean clean-build clean-pyc clean-test coverage deps dist docs help install lint lint/flake8 lint/black release test test-all test-release venv
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -23,8 +28,17 @@ export PRINT_HELP_PYSCRIPT
 
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
+VENV = .venv
+VENV_PYTHON = $(VENV)/bin/python
+SYSTEM_PYTHON = $(or $(shell which python3), $(shell which python))
+PYTHON = $(or $(wildcard $(VENV_PYTHON)), $(SYSTEM_PYTHON))
+
+$(VENV_PYTHON):
+	rm -rf $(VENV)
+	$(SYSTEM_PYTHON) -m venv --upgrade-deps $(VENV)
+
 help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+	$(PYTHON) -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
@@ -47,24 +61,20 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
-lint/flake8: ## check style with flake8
-	flake8 src tests
-lint/black: ## check style with black
-	black --check src tests
-
-lint: lint/flake8 lint/black ## check style
-
-test: ## run tests quickly with the default Python
-	pytest
-
-test-all: ## run tests on every Python version with tox
-	tox
-
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source src -m pytest
-	coverage report -m
-	coverage html
+	$(PYTHON) -m coverage run --source src -m pytest
+	$(PYTHON) -m coverage report -m
+	$(PYTHON) -m coverage html
 	$(BROWSER) htmlcov/index.html
+
+deps: ## Install development dependencies
+	$(PYTHON) -m pip install -r requirements_dev.txt
+	$(PYTHON) setup.py develop
+
+dist: clean ## builds source and wheel package
+	$(PYTHON) setup.py sdist
+	$(PYTHON) setup.py bdist_wheel
+	ls -l dist
 
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/qiskit_qir.rst
@@ -74,19 +84,32 @@ docs: ## generate Sphinx HTML documentation, including API docs
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html
 
-servedocs: docs ## compile the docs watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+install: clean ## install the package to the active Python's site-packages
+	$(PYTHON) setup.py install
+
+lint/flake8: ## check style with flake8
+	$(PYTHON) -m flake8 src tests
+
+lint/black: ## check style with black
+	$(PYTHON) -m black --check src tests
+
+lint: lint/flake8 lint/black ## check style
 
 release: dist ## package and upload a release
-	twine upload dist/*
+	$(PYTHON) -m twine upload dist/*
+
+servedocs: docs ## compile the docs watching for changes
+	$(PYTHON) -m watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+
+test: ## run tests quickly with the default Python
+	$(PYTHON) -m pytest
+
+test-all: ## run tests on every Python version with tox
+	$(PYTHON) -m tox
 
 test-release: dist ## package and upload a release
 	twine upload --repository testpypi dist/*
 
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
-
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+venv: $(VENV_PYTHON) ## Creates the python virtual environment
+	$(VENV_PYTHON) --version
+	$(VENV_PYTHON) -m pip --version

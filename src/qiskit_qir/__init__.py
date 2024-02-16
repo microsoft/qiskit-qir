@@ -4,6 +4,6 @@
 ##
 __author__ = """Microsoft Corporation"""
 __email__ = "que-contacts@microsoft.com"
-__version__ = "0.4.0"
+__version__ = "0.5.0rc1"
 
 from qiskit_qir.translate import to_qir_module
