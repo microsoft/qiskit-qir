@@ -25,6 +25,8 @@ _adj_gates = {"sdg": "s", "tdg": "t"}
 
 _measurements = {"measure": "mz"}
 
+_delays = {"delay": "delay"}
+
 _rotations = {"rx": "rx", "ry": "ry", "rz": "rz"}
 
 _two_qubit_gates = {"cx": "cnot", "cz": "cz", "swap": "swap"}
@@ -43,6 +45,8 @@ def _map_gate_name(gate: str) -> str:
         return _adj_gates[gate]
     elif gate in _measurements:
         return _measurements[gate]
+    elif gate in _delays:
+        return _delays[gate]
     elif gate in _rotations:
         return _rotations[gate]
     elif gate in _two_qubit_gates:
@@ -74,6 +78,27 @@ for gate in _one_qubit_gates.keys():
 for gate in _adj_gates.keys():
     name = _fixture_name(gate)
     locals()[name] = _generate_one_qubit_fixture(gate)
+
+
+def _generate_delay_gate_fixture(unit: str):
+    @pytest.fixture()
+    def test_fixture():
+        circuit = QuantumCircuit(1)
+        if unit == 'dt':
+            circuit.delay(1, 0, unit=unit)
+        else:
+            circuit.delay(0.5, 0, unit=unit)
+        return _map_gate_name('delay'), unit, circuit
+
+    return test_fixture
+
+
+delay_tests = []
+# Generate time param operation fixtures
+for unit in {'s', 'ms', 'us', 'ns', 'ps', 'dt'}:
+    name = _fixture_name('delay_' + unit)
+    delay_tests.append(name)
+    locals()[name] = _generate_delay_gate_fixture(unit)
 
 
 def _generate_rotation_fixture(gate: str):
