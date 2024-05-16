@@ -52,6 +52,7 @@ SUPPORTED_INSTRUCTIONS = [
     "cz",
     "h",
     "reset",
+    "delay",
     "rx",
     "ry",
     "rz",
@@ -75,6 +76,7 @@ _QUANTUM_INSTRUCTIONS = [
     "m",
     "measure",
     "reset",
+    "delay",
     "rx",
     "ry",
     "rz",
@@ -88,9 +90,7 @@ _QUANTUM_INSTRUCTIONS = [
     "z",
 ]
 
-_NOOP_INSTRUCTIONS = ["delay"]
-
-_SUPPORTED_INSTRUCTIONS = _QUANTUM_INSTRUCTIONS + _NOOP_INSTRUCTIONS
+_SUPPORTED_INSTRUCTIONS = _QUANTUM_INSTRUCTIONS
 
 
 class QuantumCircuitElementVisitor(metaclass=ABCMeta):
@@ -317,7 +317,13 @@ class BasicQisVisitor(QuantumCircuitElementVisitor):
                 if self._emit_barrier_calls:
                     qis.barrier(self._builder)
             elif "delay" == instruction.name:
-                pass
+                # us is chosen as the default time unit in QIR since it is well
+                # suited to current performance of qubit implementations.
+                # When using dt, the backend-dependent time unit, the duration
+                # value is left untouched.
+                multipliers = {"s": 1e6, "ms": 1e3, "us": 1, "ns": 1e-3, "ps": 1e-6, "dt": 1}
+                duration = instruction.duration * multipliers[instruction.unit]
+                qis.delay(self._builder, duration, *qubits)
             elif "swap" == instruction.name:
                 qis.swap(self._builder, *qubits)
             elif "ccx" == instruction.name:
