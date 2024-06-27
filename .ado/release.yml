@@ -90,7 +90,7 @@ extends:
     - stage: test
       displayName: test
       dependsOn: build
-      condition: and(succeeded(), not(cancelled()), not(failed()))
+      condition: succeeded()
       jobs:
       - ${{ each host in parameters.hosts }}:
         - ${{ each python in parameters.python }}:
