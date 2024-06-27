@@ -94,11 +94,13 @@ extends:
       jobs:
       - ${{ each host in parameters.hosts }}:
         - ${{ each python in parameters.python }}:
-          - job: Tests_Python_${{ python.name }}_${{ host.name }}_job
+          - job: Tests_${{ python.name }}_${{ host.name }}_job
             pool:
               name: ${{ host.poolName }}
               image: ${{ host.imageName }}
               os: ${{ host.os }}
+            variables:
+              PYTHON_VERSION: ${{ python.version }}
             templateContext:
               inputs:  # All input build artifacts must be declared here
               - input: pipelineArtifact
@@ -107,8 +109,8 @@ extends:
             steps:
             - task: UsePythonVersion@0
               inputs:
-                versionSpec: '${{ python.version }}'
-              displayName: 'Use Python ${{ python.version }}'
+                versionSpec: '$(PYTHON_VERSION)'
+              displayName: 'Use Python $(PYTHON_VERSION)'
             - script: |
                 python -m pip install --upgrade pip
                 python -m pip install -r requirements_dev.txt
