@@ -123,7 +123,7 @@ extends:
     - stage: approval
       displayName: Approval
       dependsOn: test
-      condition: and(succeeded(), not(cancelled()), not(failed()), eq(variables['Build.Reason'], 'Manual'))
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
       jobs:
       - job: "Approval"
         pool: server
@@ -139,7 +139,7 @@ extends:
     - stage: release
       displayName: Release
       dependsOn: approval
-      condition: and(succeeded(), not(cancelled()), not(failed()), eq(variables['Build.Reason'], 'Manual'))
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
       jobs:
       # We will get a warning about extra files in the sbom validation saying it failed.
       # This is expected as we have the wheels being downloaded to the same directory.
