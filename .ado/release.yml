@@ -38,14 +38,30 @@ parameters:
 - name: python
   type: object
   default:
-   - name: Python38
-     version: '3.8'
-   - name: Python39
-     version: '3.9'
-   - name: Python310
-     version: '3.10'
-   - name: Python311
-     version: '3.11'
+    - name: Python38
+      version: '3.8'
+      version_s: '3.8'
+      version_d: "3.8"
+      version_f: 3.8
+      version_minor: 8
+    - name: Python39
+      version: '3.9'
+      version_s: '3.9'
+      version_d: "3.9"
+      version_f: 3.9
+      version_minor: 9
+    - name: Python310
+      version: '3.10'
+      version_s: '3.10'
+      version_d: "3.10"
+      version_f: 3.10
+      version_minor: 10
+    - name: Python311
+      version: '3.11'
+      version_s: '3.11'
+      version_d: "3.11"
+      version_f: 3.11
+      version_minor: 11
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
@@ -110,7 +126,7 @@ extends:
             - task: UsePythonVersion@0
               inputs:
                 versionSpec: '$(PYTHON_VERSION)'
-              displayName: 'Use Python $(PYTHON_VERSION)'
+              displayName: 'Use Python ${{ python.version }}, ${{ python.version_s }}, ${{ python.version_d }}, ${{ python.version_f }}, 3.${{ python.version_minor }}'
             - script: |
                 python -m pip install --upgrade pip
                 python -m pip install -r requirements_dev.txt
