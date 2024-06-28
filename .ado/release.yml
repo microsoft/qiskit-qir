@@ -38,14 +38,14 @@ parameters:
 - name: python
   type: object
   default:
-   - name: Python38
-     version: '3.8'
-   - name: Python39
-     version: '3.9'
-   - name: Python310
-     version: '3.10'
-   - name: Python311
-     version: '3.11'
+    - name: Python38
+      version_minor: 8
+    - name: Python39
+      version_minor: 9
+    - name: Python310
+      version_minor: 10
+    - name: Python311
+      version_minor: 11
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
@@ -90,11 +90,11 @@ extends:
     - stage: test
       displayName: test
       dependsOn: build
-      condition: and(succeeded(), not(cancelled()), not(failed()))
+      condition: succeeded()
       jobs:
       - ${{ each host in parameters.hosts }}:
         - ${{ each python in parameters.python }}:
-          - job: Tests_Python_${{ python.name }}_${{ host.name }}_job
+          - job: Tests_${{ python.name }}_${{ host.name }}_job
             pool:
               name: ${{ host.poolName }}
               image: ${{ host.imageName }}
@@ -107,8 +107,8 @@ extends:
             steps:
             - task: UsePythonVersion@0
               inputs:
-                versionSpec: '${{ python.version }}'
-              displayName: 'Use Python ${{ python.version }}'
+                versionSpec: '3.${{ python.version_minor }}'
+              displayName: 'Use Python 3.${{ python.version_minor }}'
             - script: |
                 python -m pip install --upgrade pip
                 python -m pip install -r requirements_dev.txt
@@ -123,7 +123,7 @@ extends:
     - stage: approval
       displayName: Approval
       dependsOn: test
-      condition: and(succeeded(), not(cancelled()), not(failed()), eq(variables['Build.Reason'], 'Manual'))
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
       jobs:
       - job: "Approval"
         pool: server
@@ -139,7 +139,7 @@ extends:
     - stage: release
       displayName: Release
       dependsOn: approval
-      condition: and(succeeded(), not(cancelled()), not(failed()), eq(variables['Build.Reason'], 'Manual'))
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
       jobs:
       # We will get a warning about extra files in the sbom validation saying it failed.
       # This is expected as we have the wheels being downloaded to the same directory.
@@ -163,18 +163,17 @@ extends:
             ls $(System.DefaultWorkingDirectory)/dist
           displayName: Display Py Artifacts in Publishing Dir
 
-        # - task: EsrpRelease@4
-        #   condition: succeeded()
-        #   displayName: Publish Py Packages
-        #   inputs:
-        #     ConnectedServiceName: 'ESRP_Release'
-        #     Intent: 'PackageDistribution'
-        #     ContentType: 'PyPi'
-        #     FolderLocation: '$(System.DefaultWorkingDirectory)/dist'
-        #     Owners: '$(OwnerPersonalAlias)@microsoft.com'  # NB: Group email here fails the task with non-actionable output.
-        #     Approvers: 'billti@microsoft.com'
-        #     # Auto-inserted Debugging defaults:
-        #     ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-        #     MainPublisher: 'QuantumDevelpmentKit'          # ESRP Team's Correction (including the critical typo "Develpm").
-        #     DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
-
+        - task: EsrpRelease@4
+          condition: succeeded()
+          displayName: Publish Py Packages
+          inputs:
+            ConnectedServiceName: 'ESRP_Release'
+            Intent: 'PackageDistribution'
+            ContentType: 'PyPi'
+            FolderLocation: '$(System.DefaultWorkingDirectory)/dist'
+            Owners: '$(OwnerPersonalAlias)@microsoft.com'  # NB: Group email here fails the task with non-actionable output.
+            Approvers: 'billti@microsoft.com'
+            # Auto-inserted Debugging defaults:
+            ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+            MainPublisher: 'QuantumDevelpmentKit'          # ESRP Team's Correction (including the critical typo "Develpm").
+            DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
