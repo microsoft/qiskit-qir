@@ -163,18 +163,17 @@ extends:
             ls $(System.DefaultWorkingDirectory)/dist
           displayName: Display Py Artifacts in Publishing Dir
 
-        # - task: EsrpRelease@4
-        #   condition: succeeded()
-        #   displayName: Publish Py Packages
-        #   inputs:
-        #     ConnectedServiceName: 'ESRP_Release'
-        #     Intent: 'PackageDistribution'
-        #     ContentType: 'PyPi'
-        #     FolderLocation: '$(System.DefaultWorkingDirectory)/dist'
-        #     Owners: '$(OwnerPersonalAlias)@microsoft.com'  # NB: Group email here fails the task with non-actionable output.
-        #     Approvers: 'billti@microsoft.com'
-        #     # Auto-inserted Debugging defaults:
-        #     ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-        #     MainPublisher: 'QuantumDevelpmentKit'          # ESRP Team's Correction (including the critical typo "Develpm").
-        #     DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
-
+        - task: EsrpRelease@4
+          condition: succeeded()
+          displayName: Publish Py Packages
+          inputs:
+            ConnectedServiceName: 'ESRP_Release'
+            Intent: 'PackageDistribution'
+            ContentType: 'PyPi'
+            FolderLocation: '$(System.DefaultWorkingDirectory)/dist'
+            Owners: '$(OwnerPersonalAlias)@microsoft.com'  # NB: Group email here fails the task with non-actionable output.
+            Approvers: 'billti@microsoft.com'
+            # Auto-inserted Debugging defaults:
+            ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+            MainPublisher: 'QuantumDevelpmentKit'          # ESRP Team's Correction (including the critical typo "Develpm").
+            DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
