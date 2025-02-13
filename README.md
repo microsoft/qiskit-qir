@@ -1,3 +1,15 @@
+# DEPRECATION NOTICE
+
+**This repository is deprecated.** 
+
+Functionality for converting Qiskit to QIR is now part of the Modern QDK's [Qiskit interop](https://github.com/microsoft/qsharp/wiki/Qiskit-Interop).
+
+For the Modern QDK repository, please visit [Microsoft/qsharp](https://github.com/microsoft/qsharp).
+
+You can also try out the Modern QDK in VS Code for Web at [vscode.dev/quantum](https://vscode.dev/quantum).
+
+For more information about the Modern QDK and Azure Quantum, visit [https://aka.ms/AQ/Documentation](https://aka.ms/AQ/Documentation).
+
 # qiskit-qir
 
 Qiskit to QIR translator.
